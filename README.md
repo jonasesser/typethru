@@ -151,3 +151,7 @@ Please include the output of `tools/console-diagnostics.js` when reporting a pro
 - Adjustable typing speed for slow guests
 - Command snippets (never passwords)
 - Chrome Web Store and Edge Add-ons releases
+
+## License
+
+[MIT](LICENSE)
