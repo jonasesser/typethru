@@ -1,9 +1,12 @@
-'use strict';
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const { DE_TO_US, UNSUPPORTED_DE, unsupportedChars, convertDeToUs } = require('../extension/layout.js');
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  DE_TO_US,
+  UNSUPPORTED_DE,
+  UnsupportedCharsError,
+  convertDeToUs,
+  unsupportedChars,
+} from '../src/extension/layout';
 
 test('letters except y/z pass through unchanged', () => {
   const letters = 'abcdefghijklmnopqrstuvwxABCDEFGHIJKLMNOPQRSTUVWX0123456789';
@@ -22,7 +25,7 @@ test('punctuation keys', () => {
   assert.equal(convertDeToUs('ß?+*#\'-_.:,;'), '-_]}\\|/?.>,<');
 });
 
-test('umlauts map exactly', () => {
+test('umlauts map to the keys they sit on', () => {
   assert.equal(convertDeToUs('ä'), "'");
   assert.equal(convertDeToUs('ö'), ';');
   assert.equal(convertDeToUs('ü'), '[');
@@ -31,7 +34,7 @@ test('umlauts map exactly', () => {
   assert.equal(convertDeToUs('Ü'), '{');
 });
 
-test('dead keys are followed by a space', () => {
+test('dead keys', () => {
   assert.equal(convertDeToUs('^'), '` ');
   assert.equal(convertDeToUs('°'), '~');
 });
@@ -43,7 +46,17 @@ test('space and empty string', () => {
 
 test('unsupported characters are rejected, not converted', () => {
   for (const c of UNSUPPORTED_DE) {
-    assert.throws(() => convertDeToUs('abc' + c), /Not supported/, `expected ${c} to be rejected`);
+    assert.throws(() => convertDeToUs('abc' + c), UnsupportedCharsError, `expected ${c} to be rejected`);
+  }
+});
+
+test('error lists the offending characters', () => {
+  try {
+    convertDeToUs('a@b{');
+    assert.fail('expected an error');
+  } catch (e) {
+    assert.ok(e instanceof UnsupportedCharsError);
+    assert.deepEqual(e.chars, ['@', '{']);
   }
 });
 
@@ -61,14 +74,4 @@ test('mapping has no unsupported characters as keys', () => {
 test('supported part of the manual test string converts', () => {
   const s = 'yzYZ!"§$%&/()=?ß+*#\'-_.:,;äöüÄÖÜ°^';
   assert.equal(convertDeToUs(s), 'zyZY!@#$%^&*()_-]}\\|/?.>,<\';[":{~` ');
-});
-
-test('bookmarklet uses the same mapping as the extension', () => {
-  const src = fs.readFileSync(path.join(__dirname, '..', 'bookmarklet', 'typethru.js'), 'utf8');
-  const mapSrc = src.match(/var M = (\{[\s\S]*?\});/)[1];
-  const badSrc = src.match(/var BAD = ('(?:[^'\\]|\\.)*');/)[1];
-  const M = new Function('return ' + mapSrc)();
-  const BAD = new Function('return ' + badSrc)();
-  assert.deepEqual(M, DE_TO_US);
-  assert.equal(BAD, UNSUPPORTED_DE);
 });

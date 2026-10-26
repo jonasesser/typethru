@@ -1,11 +1,20 @@
 {
   "name": "typethru",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Paste text into the vSphere web console",
+  "license": "MIT",
+  "type": "module",
   "scripts": {
-    "test": "node --test test/*.test.js",
-    "build:bookmarklet": "node bookmarklet/build.js"
+    "build": "tsx scripts/build.ts",
+    "check": "tsc -p tsconfig.json",
+    "test": "node --import tsx --test test/*.test.ts"
   },
-  "license": "MIT"
+  "devDependencies": {
+    "@types/chrome": "^0.3.6",
+    "@types/node": "^26.6.5",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
 }
