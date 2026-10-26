@@ -36,16 +36,17 @@ keyboard layout, it converts the text so the right characters arrive.
 1. Download or clone this repository.
 2. Open `chrome://extensions` or `edge://extensions`.
 3. Turn on **Developer mode**.
-4. Click **Load unpacked** and select the `extension` folder.
+4. Click **Load unpacked** and select the `dist/extension` folder.
 5. Optional: pin TypeThru to the toolbar.
 
-Store releases are planned.
+The `dist` folder is created by the build (see [Development](#development)). Store
+releases are planned.
 
 ### Bookmarklet
 
-If your browser does not allow extensions, open
-[`bookmarklet/install.html`](bookmarklet/install.html) in the browser and drag one of
-the buttons onto the favorites bar. See [Bookmarklet](#bookmarklet-1) below.
+If your browser does not allow extensions, open `dist/bookmarklet/install.html` in
+the browser and drag one of the buttons onto the favorites bar. See
+[Bookmarklet](#bookmarklet-1) below.
 
 ## Usage
 
@@ -79,21 +80,21 @@ The web console has its own **Enforce US Keyboard Layout** button. The popup che
 
 ## Configuration
 
-Restrict TypeThru to your own vCenter hosts in `extension/popup.js`:
+Restrict TypeThru to your own vCenter hosts in `src/extension/popup.ts`:
 
-```js
-const ALLOWED_HOSTS = ['vcenter.example.local'];
+```ts
+const ALLOWED_HOSTS: string[] = ['vcenter.example.local'];
 ```
 
-Reload the extension after changing it. An empty list (default) accepts any page with
+Rebuild and reload the extension after changing it. An empty list (default) accepts any page with
 a web console.
 
 ## Bookmarklet
 
 The bookmarklet offers the core function without installing anything:
 
-- Built from [`bookmarklet/typethru.js`](bookmarklet/typethru.js) with
-  `npm run build:bookmarklet`
+- Built from [`src/bookmarklet/typethru.ts`](src/bookmarklet/typethru.ts); it uses
+  the same layout module as the extension
 - Two variants: with DE → US conversion and without
 - The browser's input dialog shows the text in clear text
 - No control of the console layout button
@@ -106,30 +107,42 @@ recommendations are in [SECURITY.md](SECURITY.md).
 
 ## Development
 
+TypeThru is written in TypeScript and built with esbuild. Requires Node 20 or newer.
+
 ```
-extension/        Browser extension (Manifest V3)
-  manifest.json
-  popup.html
-  popup.js        Console detection, layout button, sending
-  layout.js       Keyboard layout conversion
-bookmarklet/      Bookmarklet source, build script and install page
+npm install
+npm run build     # builds dist/extension, dist/bookmarklet, dist/tools
+npm test          # unit tests
+npm run check     # type check
+```
+
+```
+src/
+  extension/      Browser extension (Manifest V3)
+    manifest.json
+    popup.html
+    popup.ts      Popup logic
+    page.ts       Functions injected into the console page
+    layout.ts     Keyboard layout conversion
+    wmks.ts       Types for the console widget
+  bookmarklet/    Bookmarklet source
+  tools/          DevTools scripts for diagnostics and manual tests
+scripts/build.ts  Build script
 test/             Unit tests and manual test matrix
-tools/            DevTools scripts for diagnostics and manual tests
 ```
 
-Run the unit tests (Node 18 or newer, no dependencies):
-
-```
-npm test
-```
+Functions in `page.ts` are serialized and run inside the console page, so they must
+stay self-contained (no imports other than types). The build does not minify the
+extension, so the shipped code stays readable for review.
 
 Manual tests against a real console are described in
-[test/MANUAL-TESTS.md](test/MANUAL-TESTS.md). The scripts in `tools/` help with
-troubleshooting:
+[test/MANUAL-TESTS.md](test/MANUAL-TESTS.md). After building, these scripts help with
+troubleshooting (paste them into the DevTools console of the console tab):
 
-- `tools/console-diagnostics.js` reports where the console widget lives, its input
-  methods and the layout button state. It does not type anything.
-- `tools/send-test-string.js` sends a test string to the guest without conversion.
+- `dist/tools/console-diagnostics.js` reports where the console widget lives, its
+  input methods and the layout button state. It does not type anything.
+- `dist/tools/send-test-string.js` sends a test string to the guest without
+  conversion.
 
 ## Troubleshooting
 
@@ -142,7 +155,8 @@ troubleshooting:
 | Wrong characters in the guest | Match the conversion setting to the guest's keyboard layout. |
 | "Load unpacked" does nothing | Your browser may be managed by a policy that blocks unpacked extensions. Use the bookmarklet or ask your administrator. |
 
-Please include the output of `tools/console-diagnostics.js` when reporting a problem.
+Please include the output of `dist/tools/console-diagnostics.js` when reporting a
+problem.
 
 ## Roadmap
 
