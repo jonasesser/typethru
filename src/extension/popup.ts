@@ -1,8 +1,8 @@
 import { isHostAllowed } from './hosts';
 import { LAYOUT_CHOICES, convertText } from './layout';
-import { detectConsole, setEnforce, typeIntoConsole } from './page';
+import { detectConsole, diagnoseConsole, setEnforce, typeIntoConsole } from './page';
 import { loadSettings, saveLayout, type Settings } from './settings';
-import type { DetectResult, EnforceResult, PageResult } from './wmks';
+import type { DetectResult, DiagnosticsReport, EnforceResult, PageResult } from './wmks';
 
 interface Target {
   tabId: number;
@@ -26,6 +26,8 @@ const ui = {
   send: el<HTMLButtonElement>('send'),
   status: el('status'),
   options: el<HTMLAnchorElement>('options'),
+  diag: el<HTMLDetailsElement>('diag'),
+  diagOut: el('diagOut'),
 };
 
 function setStatus(msg: string, ok: boolean): void {
@@ -36,6 +38,7 @@ function setStatus(msg: string, ok: boolean): void {
 const errorMessage = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
 let target: Target | null = null;
+let currentSettings: Settings | null = null;
 
 async function init(settings: Settings): Promise<void> {
   try {
@@ -99,6 +102,33 @@ ui.layout.addEventListener('change', () => {
   void saveLayout(ui.layout.value);
 });
 
+ui.diag.addEventListener('toggle', async () => {
+  if (!ui.diag.open) return;
+  ui.diagOut.textContent = 'Collecting…';
+  const report: Record<string, unknown> = {
+    extension: chrome.runtime.getManifest().version,
+    browser: navigator.userAgent,
+    guestLayout: ui.layout.value,
+    allowedHosts: currentSettings
+      ? { count: currentSettings.allowedHosts.length, managed: currentSettings.hostsManaged }
+      : null,
+    target: target ? { origin: target.origin, frameId: target.frameId } : null,
+  };
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id === undefined) throw new Error('No active tab.');
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tab.id, allFrames: true },
+      world: 'MAIN',
+      func: diagnoseConsole,
+    });
+    report.frames = results.map(r => ({ frameId: r.frameId, ...(r.result as DiagnosticsReport | undefined) }));
+  } catch (e) {
+    report.error = errorMessage(e);
+  }
+  ui.diagOut.textContent = JSON.stringify(report, null, 2);
+});
+
 ui.options.addEventListener('click', e => {
   e.preventDefault();
   void chrome.runtime.openOptionsPage();
@@ -156,6 +186,7 @@ ui.send.addEventListener('click', async () => {
 
 void (async () => {
   const settings = await loadSettings();
+  currentSettings = settings;
   ui.layout.value = settings.layout;
   await init(settings);
 })();

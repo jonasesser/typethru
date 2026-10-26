@@ -16,6 +16,9 @@
   .ok { color: #157a2b; } .err { color: #b3261e; }
   footer { margin-top: 10px; font-size: 11px; text-align: right; }
   footer a { color: #0b5cad; }
+  details { margin-top: 8px; font-size: 11px; }
+  summary { cursor: pointer; color: #0b5cad; }
+  pre { max-height: 180px; overflow: auto; background: #f4f4f4; padding: 6px; white-space: pre-wrap; word-break: break-all; user-select: all; }
 </style>
 </head>
 <body>
@@ -27,6 +30,7 @@
   <label><input id="enforce" type="checkbox" disabled> Console: enforce US keyboard layout</label>
   <button id="send" disabled>Send</button>
   <div id="status"></div>
+  <details id="diag"><summary>Diagnostics</summary><p>Copy this into an issue when reporting a problem. It does not contain your text.</p><pre id="diagOut">Collecting…</pre></details>
   <footer><a id="options" href="#">Options</a></footer>
   <script src="popup.js"></script>
 </body>

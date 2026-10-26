@@ -36,3 +36,15 @@ export interface DetectResult {
 export interface EnforceResult extends PageResult {
   enforced?: boolean;
 }
+
+/** Diagnostics for one frame. Contains no user input. */
+export interface DiagnosticsReport {
+  url: string;
+  jquery: string | null;
+  wmksGlobal: string;
+  iframes: number;
+  instance: string | null;
+  methods: string[];
+  layoutButton: { label: string; enforced: boolean } | null;
+  keyboardLayoutId: unknown;
+}

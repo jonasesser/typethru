@@ -4,7 +4,7 @@
 // self-contained: no imports, no references to anything outside the function.
 // Only type imports are allowed (they disappear at build time).
 
-import type { DetectResult, EnforceResult, PageResult, WmksWidget } from './wmks';
+import type { DetectResult, DiagnosticsReport, EnforceResult, PageResult, WmksWidget } from './wmks';
 
 /** Finds the console and reads the layout button. Never receives the text. */
 export function detectConsole(): DetectResult {
@@ -63,4 +63,42 @@ export async function setEnforce(want: boolean): Promise<EnforceResult> {
     await new Promise(r => setTimeout(r, 300));
   }
   return { ok: isOn() === want, enforced: isOn() };
+}
+
+/** Read-only report for troubleshooting. Never receives the text. */
+export function diagnoseConsole(): DiagnosticsReport {
+  const $ = window.jQuery;
+  const report: DiagnosticsReport = {
+    url: location.origin + location.pathname,
+    jquery: $?.fn?.jquery ?? null,
+    wmksGlobal: typeof (window as unknown as Record<string, unknown>).WMKS,
+    iframes: document.querySelectorAll('iframe').length,
+    instance: null,
+    methods: [],
+    layoutButton: null,
+    keyboardLayoutId: null,
+  };
+
+  if ($) {
+    outer: for (const el of document.querySelectorAll('*')) {
+      for (const [key, value] of Object.entries($.data(el) ?? {})) {
+        const widget = value as WmksWidget | undefined;
+        if (!widget || typeof widget.sendInputString !== 'function') continue;
+        report.instance = `${el.tagName}#${el.id} key=${key}`;
+        for (const m in widget) {
+          if (typeof (widget as unknown as Record<string, unknown>)[m] === 'function' &&
+              /send|input|key|text|paste|layout/i.test(m)) report.methods.push(m);
+        }
+        try { report.keyboardLayoutId = widget.option?.('keyboardLayoutId') ?? null; } catch { /* ignore */ }
+        break outer;
+      }
+    }
+  }
+
+  const kb = document.getElementById('keyboard');
+  if (kb) {
+    const label = (kb.textContent ?? '').trim();
+    report.layoutButton = { label, enforced: /^\s*stop/i.test(label) };
+  }
+  return report;
 }
