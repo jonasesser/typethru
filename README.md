@@ -1,4 +1,8 @@
-# TypeThru
+<p align="center">
+  <img src="assets/readme-banner.png" alt="TypeThru – Paste text into the vSphere web console" width="100%">
+</p>
+
+# <img src="src/extension/icons/icon-48.png" alt="" width="32" height="32"> TypeThru
 
 **Paste text into the vSphere web console.**
 
