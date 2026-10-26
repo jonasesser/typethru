@@ -220,6 +220,10 @@ checks on every push and pull request.
 
 ### Manual tests
 
+To try TypeThru in a real web console without installing the extension, paste the
+DevTools test kit `dist/tools/typethru-console.js` into the console tab, see
+[test/CONSOLE-TESTING.md](test/CONSOLE-TESTING.md).
+
 Manual tests against a real console are described in
 [test/MANUAL-TESTS.md](test/MANUAL-TESTS.md). After building, these scripts help with
 troubleshooting (paste them into the DevTools console of the console tab):

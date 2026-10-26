@@ -2,6 +2,9 @@
 
 These checks need a real vSphere web console and are not covered by `npm test`.
 
+To test without installing the extension, use the DevTools test kit described in
+[CONSOLE-TESTING.md](CONSOLE-TESTING.md). It includes these cases as `typethru.test()`.
+
 ## Setup
 
 1. Open the VM with **Launch Web Console**.
