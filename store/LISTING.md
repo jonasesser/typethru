@@ -102,39 +102,72 @@ TypeThru is an independent open source project and is not affiliated with or end
 
 ## Chrome Web Store – Privacy practices tab
 
-**Single purpose**
+Field by field, in the order of the form ("Datenschutz" in the German dashboard).
+
+### Single purpose (Alleiniger Zweck)
 
 ```
-TypeThru has a single purpose: typing text that the user enters in the popup into the vSphere HTML5 web console open in the current tab, typed as the keys of the keyboard layout set inside the VM.
+TypeThru has a single purpose: it types text that the user enters in its popup (for example a password, a command or a script) into the VMware vSphere HTML5 web console open in the current tab, as key presses for the keyboard layout set inside the virtual machine. The vSphere web console has no clipboard support, so this replaces typing the text by hand.
 ```
 
-**Permission justification: activeTab**
+### Permission justification (Gründe für die Berechtigung)
+
+**activeTab**
 
 ```
-Used to access the current tab only after the user clicks the TypeThru icon or presses its shortcut, to find the vSphere web console on that page. TypeThru has no host permissions and cannot access any other tab or site.
+Gives access to the current tab only after the user clicks the TypeThru icon or presses its keyboard shortcut. TypeThru needs this to find the vSphere web console on that page and to type the user's text into it. TypeThru requests no host permissions and cannot access any other tab or website.
 ```
 
-**Permission justification: scripting**
+**scripting**
 
 ```
-Used to run small functions in the current tab: detecting the web console, reading and switching the console's keyboard layout button, and passing the user's text to the console's input function. No remote code is loaded; all code is packaged with the extension.
+Used to run small functions that are packaged with the extension in the current tab: finding the web console, reading and switching the console's own "Enforce US Keyboard Layout" button, and passing the user's text to the console as key presses. No remote code is loaded.
 ```
 
-**Permission justification: storage**
+**storage**
 
 ```
-Used to save the user's settings on the device: the selected guest keyboard layout and the list of allowed vCenter hosts. Also used to read settings provided by an enterprise policy (managed storage). The entered text is never stored.
+Saves the user's settings on the device: the selected VM keyboard layout, popup preferences and the list of allowed vCenter hosts. Also reads settings that an administrator provides by enterprise policy (managed storage). The text the user types is never stored.
 ```
 
-**Remote code**
+Host permissions: none (do not add any).
 
-No, I am not using remote code.
+### Remote code (Nutzt du Remote Code?)
 
-**Data usage**
+**No, I am not using remote code** (Nein, ich verwende "Remote Code" nicht).
 
-TypeThru does not collect or transmit user data. The text the user enters is only passed to the console in the current tab and is not stored or sent anywhere. Only settings (selected keyboard layout, allowed hosts) are saved locally.
+All JavaScript is part of the package; there are no external scripts, no `eval` and no code downloaded at runtime.
 
-Suggested answers: leave all data types unchecked, then confirm the three certifications (no sale of data, no use unrelated to the single purpose, no use for creditworthiness or lending). Re-check this against the current Chrome Web Store definitions before submitting, because the popup handles passwords.
+### Data types (Welche Nutzerdaten …)
+
+The Chrome Web Store requires disclosure even when data is only handled locally and never
+transmitted. TypeThru handles the text the user types – typically passwords – so declare:
+
+| Data type | Select? | Reason |
+|---|---|---|
+| Personenidentifizierbare Informationen | no | not handled |
+| Gesundheitsinformationen | no | not handled |
+| Finanzdaten und Zahlungsinformationen | no | not handled |
+| **Authentifizierungsdaten** | **yes** | Passwords the user types into the popup are passed to the console in the current tab. They are not stored or transmitted anywhere else. |
+| Persönliche Kommunikation | no | not handled |
+| Ort | no | not handled |
+| Webprotokoll | no | the current tab's host is only compared with the allowed hosts in memory, nothing is recorded |
+| Nutzeraktivität | no | no keyboard or mouse monitoring; only the text entered in the popup is sent |
+| Websitecontent | no | page content is not read or collected (only the console widget and its layout button are used) |
+
+### Certifications (Ich bestätige …)
+
+Confirm all three:
+
+- [x] I do not sell or transfer user data to third parties, outside of the approved use cases
+- [x] I do not use or transfer user data for purposes that are unrelated to my item's single purpose
+- [x] I do not use or transfer user data to determine creditworthiness or for lending purposes
+
+### Privacy policy (Datenschutzbestimmungen)
+
+```
+https://github.com/jonasesser/typethru/blob/main/store/PRIVACY.md
+```
 
 ## Edge Add-ons – Properties and listing
 
