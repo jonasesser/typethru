@@ -1,4 +1,4 @@
-import { convertDeToUs } from './layout';
+import { LAYOUT_CHOICES, NO_CONVERSION, convertText } from './layout';
 import { detectConsole, setEnforce, typeIntoConsole } from './page';
 import type { DetectResult, EnforceResult, PageResult } from './wmks';
 
@@ -25,7 +25,7 @@ const ui = {
   target: el('target'),
   text: el<HTMLInputElement>('text'),
   show: el<HTMLInputElement>('show'),
-  convert: el<HTMLInputElement>('convert'),
+  layout: el<HTMLSelectElement>('layout'),
   enforce: el<HTMLInputElement>('enforce'),
   send: el<HTMLButtonElement>('send'),
   status: el('status'),
@@ -89,14 +89,31 @@ ui.text.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !ui.send.disabled) ui.send.click();
 });
 
-// Remember the conversion setting (only this one boolean is stored, never the text).
-try {
-  const saved = localStorage.getItem('convert');
-  if (saved !== null) ui.convert.checked = saved === '1';
-} catch { /* storage unavailable */ }
+// Guest layout selection. Only the layout id is stored, never the text.
+for (const choice of LAYOUT_CHOICES) {
+  const opt = document.createElement('option');
+  opt.value = choice.id;
+  opt.textContent = choice.name;
+  ui.layout.append(opt);
+}
 
-ui.convert.addEventListener('change', () => {
-  try { localStorage.setItem('convert', ui.convert.checked ? '1' : '0'); } catch { /* ignore */ }
+function loadLayout(): string {
+  try {
+    const saved = localStorage.getItem('layout');
+    if (saved && LAYOUT_CHOICES.some(c => c.id === saved)) return saved;
+    // Migrate the former DE -> US checkbox setting
+    const legacy = localStorage.getItem('convert');
+    if (legacy !== null) return legacy === '1' ? 'de' : NO_CONVERSION;
+  } catch { /* storage unavailable */ }
+  return 'de';
+}
+
+ui.layout.value = loadLayout();
+ui.layout.addEventListener('change', () => {
+  try {
+    localStorage.setItem('layout', ui.layout.value);
+    localStorage.removeItem('convert');
+  } catch { /* ignore */ }
 });
 
 ui.enforce.addEventListener('change', async () => {
@@ -122,10 +139,8 @@ ui.send.addEventListener('click', async () => {
   if (!target) return setStatus('No console target.', false);
 
   // Conversion happens here in the extension, not in the page.
-  let out = text;
-  if (ui.convert.checked) {
-    try { out = convertDeToUs(text); } catch (e) { return setStatus(errorMessage(e), false); }
-  }
+  let out: string;
+  try { out = convertText(text, ui.layout.value); } catch (e) { return setStatus(errorMessage(e), false); }
 
   ui.send.disabled = true;
   try {

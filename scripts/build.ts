@@ -1,11 +1,12 @@
 // Builds everything into dist/:
 //   dist/extension/   ready for "Load unpacked"
-//   dist/bookmarklet/ install page with both bookmarklet variants
+//   dist/bookmarklet/ install page with one bookmarklet per guest layout
 //   dist/tools/       DevTools scripts as plain JavaScript
 //
 // Usage: npm run build
 
 import { build } from 'esbuild';
+import { LAYOUT_CHOICES } from '../src/extension/layout';
 import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -39,7 +40,7 @@ async function buildExtension(): Promise<void> {
   await writeFile(join(out, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 }
 
-async function bundleBookmarklet(convert: boolean): Promise<string> {
+async function bundleBookmarklet(layoutId: string): Promise<string> {
   const result = await build({
     entryPoints: [join(src, 'bookmarklet', 'typethru.ts')],
     bundle: true,
@@ -48,7 +49,7 @@ async function bundleBookmarklet(convert: boolean): Promise<string> {
     minify: true,
     write: false,
     legalComments: 'none',
-    define: { __CONVERT__: String(convert) },
+    define: { __LAYOUT__: JSON.stringify(layoutId) },
   });
   const code = result.outputFiles[0].text.trim();
   return 'javascript:' + encodeURIComponent(code);
@@ -59,27 +60,39 @@ const esc = (s: string): string => s.replace(/&/g, '&amp;').replace(/"/g, '&quot
 async function buildBookmarklet(): Promise<void> {
   const out = join(dist, 'bookmarklet');
   await mkdir(out, { recursive: true });
-  const de = await bundleBookmarklet(true);
-  const us = await bundleBookmarklet(false);
+  const variants: { name: string; url: string }[] = [];
+  for (const choice of LAYOUT_CHOICES) {
+    variants.push({ name: choice.name, url: await bundleBookmarklet(choice.id) });
+  }
+
+  const buttons = variants
+    .map(v => `<li><a class="bm" href="${esc(v.url)}">TypeThru</a> ${esc(v.name)}</li>`)
+    .join('\n');
+  const fields = variants
+    .map(v => `<p>${esc(v.name)}:</p>\n<textarea readonly onclick="this.select()">${esc(v.url)}</textarea>`)
+    .join('\n');
 
   const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>TypeThru bookmarklet</title>
 <style>
 body{font:15px system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;line-height:1.5}
-a.bm{display:inline-block;padding:8px 14px;background:#0b5cad;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;margin-right:8px}
-textarea{width:100%;height:90px;font:12px monospace}code{background:#eee;padding:1px 4px;border-radius:3px}
+ul.bms{list-style:none;padding:0}ul.bms li{margin:8px 0}
+a.bm{display:inline-block;padding:6px 12px;background:#0b5cad;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;margin-right:8px}
+textarea{width:100%;height:70px;font:12px monospace}code{background:#eee;padding:1px 4px;border-radius:3px}
+details{margin-top:12px}
 </style></head>
 <body>
 <h1>TypeThru bookmarklet</h1>
 <p>Types text into the vSphere HTML5 web console without installing an extension.</p>
 <h2>Install</h2>
-<p>Show the favorites bar (<code>Ctrl+Shift+B</code>) and drag the button that matches the guest's keyboard layout onto it:</p>
-<p><a class="bm" href="${esc(de)}">TypeThru (DE)</a><a class="bm" href="${esc(us)}">TypeThru (US)</a></p>
-<p>Or create a favorite manually and paste one of these as the URL:</p>
-<p>German guest layout (DE &rarr; US conversion):</p>
-<textarea readonly onclick="this.select()">${esc(de)}</textarea>
-<p>US guest layout (no conversion):</p>
-<textarea readonly onclick="this.select()">${esc(us)}</textarea>
+<p>Show the favorites bar (<code>Ctrl+Shift+B</code>) and drag the button for the guest's keyboard layout onto it. Rename the favorite if you add more than one.</p>
+<ul class="bms">
+${buttons}
+</ul>
+<details><summary>Create the favorite manually</summary>
+<p>Create a favorite and paste the URL for your guest layout:</p>
+${fields}
+</details>
 <h2>Use</h2>
 <ol>
 <li>Open the VM with <i>Launch Web Console</i> and click once into the console.</li>
@@ -90,7 +103,7 @@ textarea{width:100%;height:90px;font:12px monospace}code{background:#eee;padding
 <h2>Notes</h2>
 <ul>
 <li>The browser dialog shows the text in clear text while you type.</li>
-<li>With DE &rarr; US conversion these characters are refused instead of being typed wrong: <code>@ € { [ ] } \\ ~ | &lt; &gt; µ ² ³</code></li>
+<li>Characters that cannot be typed with the selected layout (AltGr characters, the key next to left Shift, characters not on the keyboard) are refused instead of being typed wrong.</li>
 <li>Nothing is stored or sent anywhere; the text only goes to the console on the current page.</li>
 </ul>
 </body></html>

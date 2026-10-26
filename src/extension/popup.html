@@ -8,6 +8,7 @@
   body { font: 13px system-ui, sans-serif; width: 270px; margin: 12px; }
   input[type=password], input[type=text] { width: 100%; box-sizing: border-box; padding: 6px; font-size: 14px; }
   label { display: flex; align-items: center; gap: 6px; margin: 8px 0; }
+  select { width: 100%; padding: 4px; font-size: 13px; }
   button { width: 100%; padding: 6px; font-size: 13px; cursor: pointer; }
   button:disabled { cursor: not-allowed; }
   #target { font-size: 11px; color: #555; margin-bottom: 8px; word-break: break-all; }
@@ -19,7 +20,8 @@
   <div id="target">Looking for console…</div>
   <input id="text" type="password" placeholder="Text / password" autofocus autocomplete="off" spellcheck="false">
   <label><input id="show" type="checkbox"> Show text</label>
-  <label><input id="convert" type="checkbox" checked> Convert German (DE) → US layout</label>
+  <label for="layout">Guest keyboard layout</label>
+  <select id="layout"></select>
   <label><input id="enforce" type="checkbox" disabled> Console: enforce US keyboard layout</label>
   <button id="send" disabled>Send</button>
   <div id="status"></div>
