@@ -15,7 +15,7 @@ Field limits can change; check them in the developer dashboards when submitting.
 Suggested screenshots:
 
 1. Popup next to a web console with a login prompt ("Target" line visible)
-2. Guest keyboard layout dropdown
+2. VM keyboard layout dropdown
 3. A command typed into a Linux shell through TypeThru
 4. Error message for an unsupported character
 
@@ -59,7 +59,7 @@ The vSphere HTML5 web console has no clipboard support for the guest. Long passw
 TypeThru fixes that. Open the web console, click the TypeThru icon, enter your text and press Enter. TypeThru sends it to the console as keystrokes.
 
 KEYBOARD LAYOUTS
-The console sends characters as US key positions. If the guest uses another layout, many characters arrive wrong. TypeThru types every character as the right physical key for the guest's layout – including AltGr characters like @ { } [ ] \ | – so the right characters appear:
+The console sends characters as US key positions. If the guest uses another layout, many characters arrive wrong. TypeThru types every character as the right physical key for the keyboard layout set inside the VM – including AltGr characters like @ { } [ ] \ | – so the right characters appear:
 • German (Germany, Austria)
 • Swiss German
 • French (AZERTY)
@@ -91,7 +91,7 @@ USE CASES
 • IP addresses, hostnames and domain-join details
 
 LIMITATIONS
-• Characters that are not on the guest's keyboard layout are rejected instead of being typed wrong.
+• Characters that are not on the VM's keyboard layout are rejected instead of being typed wrong.
 • TypeThru uses the console's internal input functions, which may change with vSphere updates.
 
 TypeThru is an independent open source project and is not affiliated with or endorsed by Broadcom or VMware. vSphere is a trademark of its respective owner.
@@ -102,7 +102,7 @@ TypeThru is an independent open source project and is not affiliated with or end
 **Single purpose**
 
 ```
-TypeThru has a single purpose: typing text that the user enters in the popup into the vSphere HTML5 web console open in the current tab, optionally converted for the guest's keyboard layout.
+TypeThru has a single purpose: typing text that the user enters in the popup into the vSphere HTML5 web console open in the current tab, typed as the keys of the keyboard layout set inside the VM.
 ```
 
 **Permission justification: activeTab**

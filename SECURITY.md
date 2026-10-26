@@ -10,7 +10,7 @@ can access, how the text is handled and which risks remain.
 | Permissions | `activeTab`, `scripting`, `storage` |
 | Host permissions | None. TypeThru can only access the tab you are on, and only after you click its icon or press its shortcut. |
 | Network | None. No requests, no telemetry, no remote code. |
-| Storage | Only settings: the selected guest keyboard layout and the allowed hosts (extension storage on the device). The text is never stored. |
+| Storage | Only settings: the selected VM keyboard layout and the allowed hosts (extension storage on the device). The text is never stored. |
 | Clipboard | Not used. |
 | Background code | None. There is no service worker; code only runs while the popup is open. |
 | Content Security Policy | The popup allows only its own scripts (no inline or remote scripts). |

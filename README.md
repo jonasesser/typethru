@@ -61,7 +61,7 @@ ask your administrator.
 If your browser does not allow extensions, download
 `typethru-bookmarklet-<version>.html` from the
 [latest release](https://github.com/jonasesser/typethru/releases/latest), open it in
-the browser and drag the button for your guest layout onto the favorites bar. See
+the browser and drag the button for the VM keyboard layout onto the favorites bar. See
 [Bookmarklet](#bookmarklet-1) below.
 
 ### From source
@@ -101,7 +101,24 @@ scripts type into an editor inside the VM and save the file there.
 
 ## Keyboard layouts
 
-Select the guest's layout under **Guest keyboard layout**. TypeThru types every
+### Which layout do I choose?
+
+Choose the keyboard layout that is **set inside the VM** – the one the VM's operating
+system uses. On Windows it is shown on the login screen and in the taskbar (for
+example `DEU` or `ENG`); on Linux check the keyboard settings or `localectl`.
+
+**The layout of your own PC does not matter.** TypeThru does not use your keyboard: you
+enter characters in the popup, and TypeThru presses the keys that produce exactly these
+characters on the VM's layout. Example: for `@` it presses AltGr+Q on a German VM and
+Shift+2 on a US VM.
+
+The console cannot tell which layout the VM uses, so you select it once. The first
+default comes from your browser language (German browser → German), administrators
+can preset it by policy, and TypeThru remembers your choice.
+
+### Supported layouts
+
+Select the VM's layout under **VM keyboard layout**. TypeThru types every
 character as the physical key that produces it on that layout – with Shift or AltGr
 where needed – so the guest receives exactly what you entered, including characters
 like `@ € { [ ] } \ | ~ < >`. The selection is remembered.
@@ -163,7 +180,7 @@ The schema is in [`src/extension/managed_schema.json`](src/extension/managed_sch
 | Policy | Type | Effect |
 |---|---|---|
 | `allowedHosts` | list of strings | Allowed hosts. When set, users cannot change the list. |
-| `defaultLayout` | string | Preselected guest layout (`us`, `de`, `de-ch`, `fr`, `uk`, `es`, `it`) until the user picks one. |
+| `defaultLayout` | string | Preselected VM keyboard layout (`us`, `de`, `de-ch`, `fr`, `uk`, `es`, `it`) until the user picks one. Without it, TypeThru guesses from the browser language. |
 
 Example for Windows (registry, Chrome; use `Microsoft\Edge` for Edge), replace
 `<extension-id>` with the ID shown in the browser's extension page:
@@ -184,7 +201,7 @@ The bookmarklet offers the core function without installing anything:
 
 - Built from [`src/bookmarklet/typethru.ts`](src/bookmarklet/typethru.ts); it uses
   the same layout module as the extension
-- One bookmarklet per guest layout
+- One bookmarklet per VM keyboard layout
 - The browser's input dialog shows the text in clear text
 - No control of the console layout button
 
@@ -234,8 +251,8 @@ extension, so the shipped code stays readable for review.
 Bump the version in `package.json` (the manifest version is taken from it), then tag:
 
 ```
-git tag v0.10.0
-git push origin v0.10.0
+git tag v0.11.0
+git push origin v0.11.0
 ```
 
 The release workflow checks, tests and builds the tag and attaches the extension zip,
@@ -264,8 +281,8 @@ troubleshooting (paste them into the DevTools console of the console tab):
 | No vSphere web console found in this tab. | Open the VM with **Launch Web Console** and use TypeThru in that tab. |
 | More than one console found in this tab. | Open each console in its own tab. |
 | Cannot access this tab | The browser blocks extensions on this page (for example `chrome://` pages). |
-| Not supported with this layout | The text contains a character that cannot be typed with the selected guest layout. |
-| Wrong characters in the guest | Select the guest's keyboard layout in the popup. |
+| Not supported with this layout | The text contains a character that cannot be typed with the selected VM keyboard layout. |
+| Wrong characters in the VM | Select the keyboard layout that is set inside the VM (not your PC's layout). |
 | "Load unpacked" does nothing | Your browser may be managed by a policy that blocks unpacked extensions. Use the bookmarklet or ask your administrator. |
 
 When reporting a problem, open **Diagnostics** at the bottom of the popup and copy

@@ -19,7 +19,7 @@ requests and contains no analytics or tracking.
 
 ## Settings
 
-TypeThru remembers the guest keyboard layout you selected and the allowed hosts you
+TypeThru remembers the VM keyboard layout you selected and the allowed hosts you
 enter in the options. These settings are stored locally in your browser and never
 leave your device. If your organization configures TypeThru by policy, the browser
 provides those settings to the extension; TypeThru does not send them anywhere.
@@ -29,7 +29,7 @@ provides those settings to the extension; TypeThru does not send them anywhere.
 - **activeTab** – access to the current tab only after you click the TypeThru icon or
   press its shortcut.
 - **scripting** – to find the web console on that tab and pass your text to it.
-- **storage** – to save your settings (guest layout, allowed hosts) on your device.
+- **storage** – to save your settings (VM keyboard layout, allowed hosts) on your device.
 
 TypeThru has no permission to access other websites or tabs.
 
