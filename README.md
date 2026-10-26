@@ -43,7 +43,12 @@ text so the right characters arrive.
 
 ### From the store
 
-Chrome Web Store and Edge Add-ons releases are in preparation.
+| Store | Status |
+|---|---|
+| Chrome Web Store | in review |
+| Microsoft Edge Add-ons | coming soon |
+
+Until the store versions are available, install TypeThru from a release (below).
 
 ### From a release (Chrome / Edge)
 
