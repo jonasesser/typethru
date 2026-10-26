@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "allowedHosts": {
+      "title": "Allowed vCenter hosts",
+      "description": "Hostnames where TypeThru may send text, e.g. vcenter.example.com or *.example.com. When set, users cannot change the list. Empty or unset: every host is allowed (users can set their own list).",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "defaultLayout": {
+      "title": "Default guest keyboard layout",
+      "description": "Layout preselected until the user chooses one: us, de, de-ch, fr, uk, es, it.",
+      "type": "string",
+      "enum": ["us", "de", "de-ch", "fr", "uk", "es", "it"]
+    }
+  }
+}

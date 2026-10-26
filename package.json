@@ -1,6 +1,6 @@
 {
   "name": "typethru",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "description": "Paste text into the vSphere web console",
   "license": "MIT",

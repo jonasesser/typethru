@@ -21,8 +21,11 @@ async function buildExtension(): Promise<void> {
   const out = join(dist, 'extension');
   await mkdir(out, { recursive: true });
   await build({
-    entryPoints: [join(src, 'extension', 'popup.ts')],
-    outfile: join(out, 'popup.js'),
+    entryPoints: {
+      popup: join(src, 'extension', 'popup.ts'),
+      options: join(src, 'extension', 'options.ts'),
+    },
+    outdir: out,
     bundle: true,
     format: 'iife',
     target,
@@ -31,7 +34,9 @@ async function buildExtension(): Promise<void> {
     minify: false,
     legalComments: 'none',
   });
-  await copyFile(join(src, 'extension', 'popup.html'), join(out, 'popup.html'));
+  for (const file of ['popup.html', 'options.html', 'managed_schema.json']) {
+    await copyFile(join(src, 'extension', file), join(out, file));
+  }
   await cp(join(src, 'extension', 'icons'), join(out, 'icons'), { recursive: true });
 
   // Keep manifest version in sync with package.json

@@ -1,12 +1,8 @@
-import { LAYOUT_CHOICES, NO_CONVERSION, convertText } from './layout';
+import { isHostAllowed } from './hosts';
+import { LAYOUT_CHOICES, convertText } from './layout';
 import { detectConsole, setEnforce, typeIntoConsole } from './page';
+import { loadSettings, saveLayout, type Settings } from './settings';
 import type { DetectResult, EnforceResult, PageResult } from './wmks';
-
-// ===== Configuration =====
-// Optional allowlist of vCenter hostnames. When non-empty, the extension only
-// sends text to consoles on these hosts, e.g. ['vcenter.example.local'].
-const ALLOWED_HOSTS: string[] = [];
-// =========================
 
 interface Target {
   tabId: number;
@@ -29,6 +25,7 @@ const ui = {
   enforce: el<HTMLInputElement>('enforce'),
   send: el<HTMLButtonElement>('send'),
   status: el('status'),
+  options: el<HTMLAnchorElement>('options'),
 };
 
 function setStatus(msg: string, ok: boolean): void {
@@ -40,7 +37,7 @@ const errorMessage = (e: unknown): string => (e instanceof Error ? e.message : S
 
 let target: Target | null = null;
 
-async function init(): Promise<void> {
+async function init(settings: Settings): Promise<void> {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.id === undefined) throw new Error('No active tab.');
@@ -64,8 +61,9 @@ async function init(): Promise<void> {
     const hit = hits[0];
     const res = hit.result as DetectResult;
     const candidate: Target = { tabId: tab.id, frameId: hit.frameId, origin: res.origin, host: res.host ?? '' };
-    if (ALLOWED_HOSTS.length && !ALLOWED_HOSTS.includes(candidate.host)) {
-      ui.target.textContent = `Host not in allowlist: ${candidate.host}`;
+    if (!isHostAllowed(candidate.host, settings.allowedHosts)) {
+      ui.target.textContent = `Host not allowed: ${candidate.host}. ` +
+        (settings.hostsManaged ? 'The allowed hosts are set by your organization.' : 'Add it in the options.');
       return;
     }
 
@@ -97,23 +95,13 @@ for (const choice of LAYOUT_CHOICES) {
   ui.layout.append(opt);
 }
 
-function loadLayout(): string {
-  try {
-    const saved = localStorage.getItem('layout');
-    if (saved && LAYOUT_CHOICES.some(c => c.id === saved)) return saved;
-    // Migrate the former DE -> US checkbox setting
-    const legacy = localStorage.getItem('convert');
-    if (legacy !== null) return legacy === '1' ? 'de' : NO_CONVERSION;
-  } catch { /* storage unavailable */ }
-  return 'de';
-}
-
-ui.layout.value = loadLayout();
 ui.layout.addEventListener('change', () => {
-  try {
-    localStorage.setItem('layout', ui.layout.value);
-    localStorage.removeItem('convert');
-  } catch { /* ignore */ }
+  void saveLayout(ui.layout.value);
+});
+
+ui.options.addEventListener('click', e => {
+  e.preventDefault();
+  void chrome.runtime.openOptionsPage();
 });
 
 ui.enforce.addEventListener('change', async () => {
@@ -166,4 +154,8 @@ ui.send.addEventListener('click', async () => {
   }
 });
 
-void init();
+void (async () => {
+  const settings = await loadSettings();
+  ui.layout.value = settings.layout;
+  await init(settings);
+})();
