@@ -44,7 +44,7 @@ English
 
 **Website / homepage**
 
-https://github.com/jonasesser/typethru
+https://relyper.de/projects/typethru (project page; source code: https://github.com/jonasesser/typethru)
 
 **Support**
 
