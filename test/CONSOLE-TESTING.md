@@ -67,9 +67,12 @@ Nothing is sent with Enter, so a wrong result does not count as a failed login.
 2. Run the test and enter the password in the dialog:
 
    ```js
-   await typethru.password()             // scan codes – all characters incl. AltGr
-   await typethru.password('fallback')   // previous method, for comparison (no AltGr characters)
+   await typethru.password()                   // VM with German layout
+   await typethru.password('us')               // VM with US (English) layout
+   await typethru.password('de', 'fallback')   // previous method, for comparison (no AltGr characters)
    ```
+
+   The argument is the keyboard layout **set inside the VM**, not your PC's layout.
 
 3. Within 3 seconds, click into the password field again if needed.
 4. Click the eye icon in the password field (Windows 10/11) to reveal the password and
@@ -99,6 +102,17 @@ screen or in a shell: each line ends with Enter. The cases assume a guest with a
 | T3 | scan codes | all printable ASCII | `!"#$%&'()*+,-./0-9:;<=>?@A-Z[\]^_`a-z{\|}~` |
 | T4 | fallback | supported characters with the previous method | `yzYZ!"§$%&/()=?ß+*#'-_.:,;äöüÄÖÜ°` |
 | T5 | fallback, no conversion | baseline | wrong characters on German keys (the original problem) |
+
+## VMs with another layout
+
+The cases above assume a German VM. For a VM with another keyboard layout, pass the
+layout as second argument; only the scan code cases that fit the layout are run:
+
+```js
+typethru.test(undefined, 'us')   // all fitting cases, e.g. T3 (all printable ASCII)
+typethru.test('T3', 'us')        // one case
+await typethru.password('us')    // password on the login screen
+```
 
 ## Reporting results
 
