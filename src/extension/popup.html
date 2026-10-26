@@ -24,7 +24,12 @@
       <div id="targetDetail" class="status-detail" hidden></div>
     </div>
 
-    <label class="field">
+    <div class="segmented" role="tablist" aria-label="Input mode">
+      <button id="modeLine" type="button" role="tab" aria-selected="true">Single line</button>
+      <button id="modeScript" type="button" role="tab" aria-selected="false">Script</button>
+    </div>
+
+    <label id="linePanel" class="field">
       <span class="field-label">Text</span>
       <span class="input-wrap">
         <input id="text" type="password" placeholder="Password, command, key…" autocomplete="off" spellcheck="false" disabled>
@@ -34,6 +39,20 @@
         </button>
       </span>
     </label>
+
+    <div id="scriptPanel" class="field" hidden>
+      <label class="field">
+        <span class="field-label field-label-row">Script <span id="scriptStats" class="field-meta"></span></span>
+        <textarea id="script" rows="5" spellcheck="false" autocomplete="off" wrap="off"
+          placeholder="Paste a script or multi-line text… (Ctrl+Enter sends)" disabled></textarea>
+      </label>
+      <p class="hint">Each line break presses Enter – in a shell every line runs immediately. For whole scripts, type into an editor inside the VM.</p>
+      <div class="options-row">
+        <label class="check"><input id="stripIndent" type="checkbox"> Remove indentation</label>
+        <label class="check"><input id="trailingEnter" type="checkbox"> Enter after last line</label>
+        <label class="speed">Speed <select id="speed" aria-label="Typing speed"></select></label>
+      </div>
+    </div>
 
     <label class="field">
       <span class="field-label">Guest keyboard layout</span>
@@ -52,6 +71,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
       Send to console
     </button>
+    <div id="job" class="job" hidden>
+      <div class="job-head"><span id="jobText">Sending…</span><button id="cancel" class="btn-link" type="button">Cancel</button></div>
+      <progress id="jobBar" max="1" value="0"></progress>
+    </div>
     <div id="status" class="message" role="alert"></div>
 
     <details id="diag">

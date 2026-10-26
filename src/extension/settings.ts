@@ -6,6 +6,7 @@
 
 import { LAYOUT_CHOICES } from './layout';
 import { parseHostList } from './hosts';
+import { isSpeed, type Speed } from './script';
 
 export interface Settings {
   /** Allowed hosts; empty means every host is allowed. */
@@ -14,7 +15,16 @@ export interface Settings {
   hostsManaged: boolean;
   /** Selected guest layout id. */
   layout: string;
+  /** Popup input mode. */
+  mode: 'line' | 'script';
+  /** Script mode options. */
+  speed: Speed;
+  stripIndent: boolean;
+  trailingEnter: boolean;
 }
+
+/** Popup preferences that are saved as they change. */
+export type Prefs = Pick<Settings, 'mode' | 'speed' | 'stripIndent' | 'trailingEnter'>;
 
 interface ManagedSettings {
   allowedHosts?: unknown;
@@ -24,6 +34,10 @@ interface ManagedSettings {
 interface LocalSettings {
   allowedHosts?: unknown;
   layout?: unknown;
+  mode?: unknown;
+  speed?: unknown;
+  stripIndent?: unknown;
+  trailingEnter?: unknown;
 }
 
 const DEFAULT_LAYOUT = 'de';
@@ -59,7 +73,7 @@ function legacyLayout(): string | null {
 export async function loadSettings(): Promise<Settings> {
   const [managed, local] = await Promise.all([
     readManaged(),
-    chrome.storage.local.get(['allowedHosts', 'layout']) as Promise<LocalSettings>,
+    chrome.storage.local.get(['allowedHosts', 'layout', 'mode', 'speed', 'stripIndent', 'trailingEnter']) as Promise<LocalSettings>,
   ]);
 
   const managedHosts = toHosts(managed.allowedHosts);
@@ -74,7 +88,15 @@ export async function loadSettings(): Promise<Settings> {
     if (migrated) await chrome.storage.local.set({ layout });
   }
 
-  return { allowedHosts, hostsManaged: managedHosts !== null, layout };
+  return {
+    allowedHosts,
+    hostsManaged: managedHosts !== null,
+    layout,
+    mode: local.mode === 'script' ? 'script' : 'line',
+    speed: isSpeed(local.speed) ? local.speed : 'normal',
+    stripIndent: local.stripIndent === true,
+    trailingEnter: local.trailingEnter === true,
+  };
 }
 
 export async function saveLayout(layout: string): Promise<void> {
@@ -83,4 +105,8 @@ export async function saveLayout(layout: string): Promise<void> {
 
 export async function saveAllowedHosts(hosts: string[]): Promise<void> {
   await chrome.storage.local.set({ allowedHosts: hosts });
+}
+
+export async function savePrefs(prefs: Partial<Prefs>): Promise<void> {
+  await chrome.storage.local.set(prefs);
 }
