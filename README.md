@@ -19,6 +19,8 @@ text so the right characters arrive.
 > TypeThru is an independent project and is not affiliated with or endorsed by
 > Broadcom or VMware. vSphere and vCenter are trademarks of their respective owners.
 
+<p align="center"><img src="assets/popup.png" alt="TypeThru popup in light and dark mode" width="560"></p>
+
 ## Use cases
 
 - Passwords on Windows and Linux login screens
