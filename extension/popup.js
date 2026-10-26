@@ -6,18 +6,8 @@
 const ALLOWED_HOSTS = [];
 // =========================
 
-// DE -> US mapping: for each character as it appears on a German keyboard,
-// the US character that sits on the same physical key.
-const DE_TO_US = {
-  y: 'z', z: 'y', Y: 'Z', Z: 'Y',
-  '"': '@', '§': '#', '&': '^', '/': '&', '(': '*', ')': '(', '=': ')',
-  'ß': '-', '?': '_', 'ü': '[', 'Ü': '{', '+': ']', '*': '}',
-  'ö': ';', 'Ö': ':', 'ä': "'", 'Ä': '"', '#': '\\', "'": '|',
-  ';': '<', ':': '>', '-': '/', '_': '?', '°': '~', '^': '` ',
-};
-// Characters that need AltGr or the extra ISO "<>" key cannot be produced
-// through sendInputString in this console mode.
-const UNSUPPORTED_DE = '@€{[]}\\~|<>µ²³';
+// Layout conversion lives in layout.js (loaded before this file).
+const { convertDeToUs } = self.TypeThruLayout;
 
 // ---------- Functions injected into the page (MAIN world) ----------
 // They must be self-contained: no references to anything outside themselves.
@@ -152,9 +142,7 @@ el('send').onclick = async () => {
   // Conversion happens here in the extension, not in the page.
   let out = text;
   if (el('convert').checked) {
-    const bad = [...new Set([...text].filter(c => UNSUPPORTED_DE.includes(c)))];
-    if (bad.length) return setStatus('Not supported (AltGr / <> key): ' + bad.join(' '), false);
-    out = [...text].map(c => DE_TO_US[c] ?? c).join('');
+    try { out = convertDeToUs(text); } catch (e) { return setStatus(e.message, false); }
   }
 
   el('send').disabled = true;
