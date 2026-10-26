@@ -7,7 +7,7 @@
 
 import { build } from 'esbuild';
 import { LAYOUT_CHOICES } from '../src/extension/layout';
-import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { copyFile, cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -32,6 +32,7 @@ async function buildExtension(): Promise<void> {
     legalComments: 'none',
   });
   await copyFile(join(src, 'extension', 'popup.html'), join(out, 'popup.html'));
+  await cp(join(src, 'extension', 'icons'), join(out, 'icons'), { recursive: true });
 
   // Keep manifest version in sync with package.json
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8')) as { version: string };
