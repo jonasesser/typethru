@@ -1,5 +1,5 @@
 // Bookmarklet: same core function as the extension, without installing anything.
-// Built once per guest layout by scripts/build.ts.
+// Built once per VM keyboard layout by scripts/build.ts.
 
 import { textToStrokes } from '../extension/keystrokes';
 import { LAYOUT_CHOICES, NO_CONVERSION, convertText } from '../extension/layout';
@@ -34,7 +34,7 @@ declare const __LAYOUT__: string;
   }
 
   const layoutName = LAYOUT_CHOICES.find(c => c.id === __LAYOUT__)?.name ?? __LAYOUT__;
-  const text = prompt(`TypeThru – text for the VM console (guest layout: ${layoutName}):`);
+  const text = prompt(`TypeThru – text for the VM console (VM keyboard layout: ${layoutName}):`);
   if (!text) return;
 
   try {

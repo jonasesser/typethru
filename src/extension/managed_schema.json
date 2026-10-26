@@ -8,8 +8,8 @@
       "items": { "type": "string" }
     },
     "defaultLayout": {
-      "title": "Default guest keyboard layout",
-      "description": "Layout preselected until the user chooses one: us, de, de-ch, fr, uk, es, it.",
+      "title": "Default VM keyboard layout",
+      "description": "Keyboard layout of the VMs (as set inside the guest OS), preselected until the user chooses one: us, de, de-ch, fr, uk, es, it. Without this policy TypeThru guesses from the browser language.",
       "type": "string",
       "enum": ["us", "de", "de-ch", "fr", "uk", "es", "it"]
     }

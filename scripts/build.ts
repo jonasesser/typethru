@@ -1,6 +1,6 @@
 // Builds everything into dist/:
 //   dist/extension/   ready for "Load unpacked"
-//   dist/bookmarklet/ install page with one bookmarklet per guest layout
+//   dist/bookmarklet/ install page with one bookmarklet per VM keyboard layout
 //   dist/tools/       DevTools scripts as plain JavaScript
 //
 // Usage: npm run build
@@ -91,12 +91,12 @@ details{margin-top:12px}
 <h1>TypeThru bookmarklet</h1>
 <p>Types text into the vSphere HTML5 web console without installing an extension.</p>
 <h2>Install</h2>
-<p>Show the favorites bar (<code>Ctrl+Shift+B</code>) and drag the button for the guest's keyboard layout onto it. Rename the favorite if you add more than one.</p>
+<p>Show the favorites bar (<code>Ctrl+Shift+B</code>) and drag the button for the keyboard layout <b>set inside the VM</b> onto it (for example German if the Windows login screen shows “DEU”). Your PC's layout does not matter. Rename the favorite if you add more than one.</p>
 <ul class="bms">
 ${buttons}
 </ul>
 <details><summary>Create the favorite manually</summary>
-<p>Create a favorite and paste the URL for your guest layout:</p>
+<p>Create a favorite and paste the URL for the VM keyboard layout:</p>
 ${fields}
 </details>
 <h2>Use</h2>

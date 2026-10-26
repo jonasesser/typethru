@@ -4,7 +4,7 @@
 //   (schema in managed_schema.json). Managed hosts cannot be changed by the user.
 // - chrome.storage.local: user settings from the options page and popup.
 
-import { LAYOUT_CHOICES } from './layout';
+import { LAYOUT_CHOICES, guessLayout } from './layout';
 import { parseHostList } from './hosts';
 import { isSpeed, type Speed } from './script';
 
@@ -13,7 +13,7 @@ export interface Settings {
   allowedHosts: string[];
   /** True if the allowed hosts come from an enterprise policy. */
   hostsManaged: boolean;
-  /** Selected guest layout id. */
+  /** Selected VM keyboard layout id. */
   layout: string;
   /** Popup input mode. */
   mode: 'line' | 'script';
@@ -40,7 +40,6 @@ interface LocalSettings {
   trailingEnter?: unknown;
 }
 
-const DEFAULT_LAYOUT = 'de';
 
 const isLayout = (v: unknown): v is string => typeof v === 'string' && LAYOUT_CHOICES.some(c => c.id === v);
 
@@ -84,7 +83,7 @@ export async function loadSettings(): Promise<Settings> {
     layout = local.layout;
   } else {
     const migrated = legacyLayout();
-    layout = migrated ?? (isLayout(managed.defaultLayout) ? managed.defaultLayout : DEFAULT_LAYOUT);
+    layout = migrated ?? (isLayout(managed.defaultLayout) ? managed.defaultLayout : guessLayout(navigator.language));
     if (migrated) await chrome.storage.local.set({ layout });
   }
 

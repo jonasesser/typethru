@@ -107,7 +107,7 @@ function check(r: JobStatus | PageResult): void {
   if ('ok' in r && !r.ok) throw new Error('TypeThru: ' + r.msg);
 }
 
-/** Types text for the guest layout. Uses scan codes if available, otherwise the fallback. */
+/** Types text for the VM keyboard layout. Uses scan codes if available, otherwise the fallback. */
 async function typeText(text: string, layout: string, use: Method, strokeDelayMs: number, chunkDelayMs: number): Promise<void> {
   if (use === 'scancodes' && hasScanCodes()) {
     check(startKeyJob(textToStrokes(text, layout).map(s => [...s]), strokeDelayMs));
@@ -119,7 +119,7 @@ async function typeText(text: string, layout: string, use: Method, strokeDelayMs
   if (s?.error) throw new Error('TypeThru: ' + s.error);
 }
 
-/** Types text for the guest layout (3 s delay). */
+/** Types text for the VM keyboard layout (3 s delay). */
 async function send(text: string, layout = 'de', delayMs = 3000): Promise<void> {
   requireWidget();
   if (method === 'scancodes') textToStrokes(text, layout); else convertText(text, layout); // validate first
@@ -223,7 +223,7 @@ function useMethod(next?: Method): Method {
 function help(): void {
   console.log(`TypeThru console test kit
 
-  typethru.send(text, layout = 'de')   type text for the guest layout (3 s delay)
+  typethru.send(text, layout = 'de')   type text; layout = keyboard layout set INSIDE the VM
   typethru.prompt(layout = 'de')       ask for the text in a dialog, then type it
   typethru.password()                  login screen: dialog, typed without Enter
   typethru.password('fallback')        same with the previous method (no AltGr characters)

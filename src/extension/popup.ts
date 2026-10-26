@@ -386,7 +386,7 @@ ui.send.addEventListener('click', () => {
   void (mode === 'script' ? sendScript() : sendLine());
 });
 
-// Guest layout selection. Only the layout id is stored, never the text.
+// VM keyboard layout selection. Only the layout id is stored, never the text.
 for (const choice of LAYOUT_CHOICES) {
   const opt = document.createElement('option');
   opt.value = choice.id;

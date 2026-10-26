@@ -132,6 +132,21 @@ export const LAYOUT_CHOICES: readonly { id: string; name: string }[] = [
   ...LAYOUTS.map(l => ({ id: l.id, name: l.name })),
 ];
 
+/**
+ * Guesses the VM keyboard layout from a browser language (e.g. navigator.language).
+ * Used only as the first-time default; the user can always change it.
+ */
+export function guessLayout(language: string | undefined): string {
+  const lang = (language ?? '').toLowerCase();
+  if (lang === 'de-ch' || lang === 'gsw' || lang.startsWith('gsw-')) return SWISS_GERMAN.id;
+  if (lang === 'de' || lang.startsWith('de-')) return GERMAN.id;
+  if (lang === 'fr' || (lang.startsWith('fr-') && lang !== 'fr-ch' && lang !== 'fr-ca' && lang !== 'fr-be')) return FRENCH.id;
+  if (lang === 'en-gb' || lang === 'en-ie') return UK.id;
+  if (lang === 'es' || lang === 'es-es') return SPANISH.id;
+  if (lang === 'it' || lang === 'it-it') return ITALIAN.id;
+  return NO_CONVERSION;
+}
+
 /** Characters that never need conversion. */
 const PASS_THROUGH = ' \n\t';
 

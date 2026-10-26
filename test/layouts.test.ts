@@ -103,3 +103,19 @@ test('Italian', () => {
 test('German is still the same as before', () => {
   assert.equal(convert('yzYZ!"§$%&/()=?ß+*#\'-_.:,;äöüÄÖÜ°^', 'de'), 'zyZY!@#$%^&*()_-]}\\|/?.>,<\';[":{~` ');
 });
+
+test('guessLayout from browser language', async () => {
+  const { guessLayout } = await import('../src/extension/layout');
+  assert.equal(guessLayout('de-DE'), 'de');
+  assert.equal(guessLayout('de-AT'), 'de');
+  assert.equal(guessLayout('de'), 'de');
+  assert.equal(guessLayout('de-CH'), 'de-ch');
+  assert.equal(guessLayout('fr-FR'), 'fr');
+  assert.equal(guessLayout('fr-CH'), 'us');
+  assert.equal(guessLayout('en-GB'), 'uk');
+  assert.equal(guessLayout('en-US'), 'us');
+  assert.equal(guessLayout('es-ES'), 'es');
+  assert.equal(guessLayout('it-IT'), 'it');
+  assert.equal(guessLayout('ja-JP'), 'us');
+  assert.equal(guessLayout(undefined), 'us');
+});
