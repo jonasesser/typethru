@@ -7,10 +7,10 @@ can access, how the text is handled and which risks remain.
 
 | Item | Details |
 |---|---|
-| Permissions | `activeTab`, `scripting` |
+| Permissions | `activeTab`, `scripting`, `storage` |
 | Host permissions | None. TypeThru can only access the tab you are on, and only after you click its icon or press its shortcut. |
 | Network | None. No requests, no telemetry, no remote code. |
-| Storage | Only the selected guest keyboard layout (extension-local storage). The text is never stored. |
+| Storage | Only settings: the selected guest keyboard layout and the allowed hosts (extension storage on the device). The text is never stored. |
 | Clipboard | Not used. |
 | Background code | None. There is no service worker; code only runs while the popup is open. |
 | Content Security Policy | The popup allows only its own scripts (no inline or remote scripts). |
@@ -31,7 +31,8 @@ can access, how the text is handled and which risks remain.
   vCenter instances you trust.
 - **Look-alike pages.** A malicious page could imitate a web console. The popup shows
   the target origin before sending, and you can restrict TypeThru to your hosts with
-  `ALLOWED_HOSTS` (see README). Using the allowlist is recommended.
+  the allowed hosts in the options or by enterprise policy (see README). Using the
+  allowlist is recommended; administrators can enforce it for all users.
 - **Focus in the guest.** The text goes wherever the guest has keyboard focus. If the
   cursor is in a visible field, a password will be shown in clear text.
 - **Show text.** This option displays the text in the popup. Leave it off for

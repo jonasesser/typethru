@@ -74,13 +74,14 @@ FEATURES
 • Keyboard layout conversion including dead keys
 • Shows and switches the console's "Enforce US Keyboard Layout" button
 • Shows the target page before sending
+• Allowed hosts configurable in the options or centrally by enterprise policy
 • Keyboard shortcut Ctrl+Shift+Y
 
 PRIVACY AND SECURITY
-• Only two permissions: activeTab and scripting – no access to other sites
+• Only three permissions: activeTab, scripting and storage – no access to other sites
 • Works only on the tab you are on, after you click the icon
 • No network requests, no analytics, no remote code
-• Your text is never stored; only the selected layout is remembered
+• Your text is never stored; only your settings are remembered
 • Open source: https://github.com/jonasesser/typethru
 
 USE CASES
@@ -116,13 +117,19 @@ Used to access the current tab only after the user clicks the TypeThru icon or p
 Used to run small functions in the current tab: detecting the web console, reading and switching the console's keyboard layout button, and passing the user's text to the console's input function. No remote code is loaded; all code is packaged with the extension.
 ```
 
+**Permission justification: storage**
+
+```
+Used to save the user's settings on the device: the selected guest keyboard layout and the list of allowed vCenter hosts. Also used to read settings provided by an enterprise policy (managed storage). The entered text is never stored.
+```
+
 **Remote code**
 
 No, I am not using remote code.
 
 **Data usage**
 
-TypeThru does not collect or transmit user data. The text the user enters is only passed to the console in the current tab and is not stored or sent anywhere. Only the selected keyboard layout is saved locally.
+TypeThru does not collect or transmit user data. The text the user enters is only passed to the console in the current tab and is not stored or sent anywhere. Only settings (selected keyboard layout, allowed hosts) are saved locally.
 
 Suggested answers: leave all data types unchecked, then confirm the three certifications (no sale of data, no use unrelated to the single purpose, no use for creditworthiness or lending). Re-check this against the current Chrome Web Store definitions before submitting, because the popup handles passwords.
 

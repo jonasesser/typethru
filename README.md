@@ -30,7 +30,7 @@ text so the right characters arrive.
 - Sends text to the web console as keystrokes
 - Keyboard layout conversion for German, Swiss German, French (AZERTY), UK, Spanish and Italian guests
 - Shows and switches the console's own "Enforce US Keyboard Layout" button
-- Shows the target before sending, optional host allowlist
+- Shows the target before sending, host allowlist in the options or via enterprise policy
 - Minimal permissions, no network access, nothing stored
 - Bookmarklet version for browsers where extensions cannot be installed
 
@@ -102,14 +102,43 @@ The web console has its own **Enforce US Keyboard Layout** button. The popup che
 
 ## Configuration
 
-Restrict TypeThru to your own vCenter hosts in `src/extension/popup.ts`:
+### Allowed hosts
 
-```ts
-const ALLOWED_HOSTS: string[] = ['vcenter.example.local'];
+Open **Options** (link in the popup, or right-click the TypeThru icon → *Options*)
+and enter your vCenter hosts, one per line:
+
+```
+vcenter.example.com
+*.lab.example.com
 ```
 
-Rebuild and reload the extension after changing it. An empty list (default) accepts
-any page with a web console.
+`*.domain` matches all subdomains. An empty list (default) allows every host; the
+popup always shows the target before sending. Restricting TypeThru to your own
+hosts is recommended.
+
+### Enterprise policy
+
+Administrators can preset TypeThru for all users with Chrome or Edge policies
+(`3rdparty` extension policy, for example via group policy, Intune or another MDM).
+The schema is in [`src/extension/managed_schema.json`](src/extension/managed_schema.json).
+
+| Policy | Type | Effect |
+|---|---|---|
+| `allowedHosts` | list of strings | Allowed hosts. When set, users cannot change the list. |
+| `defaultLayout` | string | Preselected guest layout (`us`, `de`, `de-ch`, `fr`, `uk`, `es`, `it`) until the user picks one. |
+
+Example for Windows (registry, Chrome; use `Microsoft\Edge` for Edge), replace
+`<extension-id>` with the ID shown in the browser's extension page:
+
+```
+HKLM\Software\Policies\Google\Chrome\3rdparty\extensions\<extension-id>\policy\allowedHosts
+    1 = "vcenter.example.com"
+    2 = "*.lab.example.com"
+HKLM\Software\Policies\Google\Chrome\3rdparty\extensions\<extension-id>\policy
+    defaultLayout = "de"
+```
+
+Check the result under `chrome://policy` or `edge://policy`.
 
 ## Bookmarklet
 
@@ -123,8 +152,8 @@ The bookmarklet offers the core function without installing anything:
 
 ## Security
 
-TypeThru needs only `activeTab` and `scripting`, has no host permissions, no network
-access, no background worker and never stores the text. Details, residual risks and
+TypeThru needs only `activeTab`, `scripting` and `storage`, has no host permissions,
+no network access, no background worker and never stores the text. Details, residual risks and
 recommendations are in [SECURITY.md](SECURITY.md).
 
 ## Development
