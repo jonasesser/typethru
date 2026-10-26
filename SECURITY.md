@@ -43,10 +43,14 @@ can access, how the text is handled and which risks remain.
 - **Bookmarklet.** The browser's input dialog shows the text in clear text.
 - **Unpacked installs.** Loading from source is intended for review and testing.
   Follow your organization's policy for browser extensions.
-- **Undocumented console API.** TypeThru uses the console widget's
-  `sendInputString` method, which is not a public API and may change with vSphere
-  updates. TypeThru then reports that no console was found; it does not fall back
-  to other input methods.
+- **Undocumented console API.** TypeThru types through the console widget's internal
+  connection (raw scan codes via `onKeyVScan`, fallback `sendInputString`). These are
+  not public APIs and may change with vSphere updates. TypeThru then reports that no
+  console was found. It never uses the console's Unicode key event, which disconnects
+  the console.
+- **Modifier keys.** Every key stroke presses and releases its keys (including Shift
+  and AltGr) in one step, so no modifier stays pressed when sending stops, fails or is
+  cancelled.
 
 ## Reporting a vulnerability
 

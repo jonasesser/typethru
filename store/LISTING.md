@@ -59,20 +59,19 @@ The vSphere HTML5 web console has no clipboard support for the guest. Long passw
 TypeThru fixes that. Open the web console, click the TypeThru icon, enter your text and press Enter. TypeThru sends it to the console as keystrokes.
 
 KEYBOARD LAYOUTS
-The console sends characters as US key positions. If the guest uses another layout, many characters arrive wrong. TypeThru converts the text for the guest's layout so the right characters appear:
+The console sends characters as US key positions. If the guest uses another layout, many characters arrive wrong. TypeThru types every character as the right physical key for the guest's layout – including AltGr characters like @ { } [ ] \ | – so the right characters appear:
 • German (Germany, Austria)
 • Swiss German
 • French (AZERTY)
 • English (UK)
 • Spanish
 • Italian
-• US (no conversion)
-Characters that cannot be typed with the selected layout are rejected with a clear message instead of being typed wrong.
+• US
 
 FEATURES
 • Types any text into the vSphere web console
 • Script mode: multi-line text and scripts, line by line, with speed setting, progress and cancel
-• Keyboard layout conversion including dead keys
+• Keyboard layouts including AltGr characters and dead keys
 • Shows and switches the console's "Enforce US Keyboard Layout" button
 • Shows the target page before sending
 • Allowed hosts configurable in the options or centrally by enterprise policy
@@ -92,8 +91,8 @@ USE CASES
 • IP addresses, hostnames and domain-join details
 
 LIMITATIONS
-• Characters that need AltGr (for example @ { } [ ] \ on German keyboards) cannot be sent with layout conversion yet.
-• TypeThru uses the console's built-in input function, which may change with vSphere updates.
+• Characters that are not on the guest's keyboard layout are rejected instead of being typed wrong.
+• TypeThru uses the console's internal input functions, which may change with vSphere updates.
 
 TypeThru is an independent open source project and is not affiliated with or endorsed by Broadcom or VMware. vSphere is a trademark of its respective owner.
 ```

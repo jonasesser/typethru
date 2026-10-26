@@ -33,7 +33,7 @@ text so the right characters arrive.
 
 - Sends text to the web console as keystrokes
 - Script mode for multi-line text with adjustable speed, progress and cancel
-- Keyboard layout conversion for German, Swiss German, French (AZERTY), UK, Spanish and Italian guests
+- Correct characters for German, Swiss German, French (AZERTY), UK, Spanish, Italian and US guests – including AltGr characters such as `@ { } [ ] \ |`
 - Shows and switches the console's own "Enforce US Keyboard Layout" button
 - Shows the target before sending, host allowlist in the options or via enterprise policy
 - Minimal permissions, no network access, nothing stored
@@ -98,19 +98,17 @@ snippets or any multi-line text:
 Every line break presses Enter. In a shell every line runs immediately, so for whole
 scripts type into an editor inside the VM and save the file there.
 
-On a German guest, characters that need AltGr (`{ } [ ] \ | @ ~`) are not supported
-with conversion yet, see [#6](https://github.com/jonasesser/typethru/issues/6).
 
 ## Keyboard layouts
 
-The console sends characters as US key positions. Select the guest's layout under
-**Guest keyboard layout** and TypeThru replaces each character with the US character
-on the same physical key, so the guest receives what you typed. The selection is
-remembered.
+Select the guest's layout under **Guest keyboard layout**. TypeThru types every
+character as the physical key that produces it on that layout – with Shift or AltGr
+where needed – so the guest receives exactly what you entered, including characters
+like `@ € { [ ] } \ | ~ < >`. The selection is remembered.
 
 | Layout | Notes |
 |---|---|
-| US (no conversion) | Text is sent as-is |
+| US | |
 | German (Germany, Austria) | |
 | Swiss German | |
 | French (AZERTY) | |
@@ -121,16 +119,19 @@ remembered.
 Dead keys (for example `^`, `´`, `` ` ``, `¨`) are sent followed by a space so the
 character itself appears.
 
-With conversion, some characters cannot be sent and are rejected instead of being
-typed wrong:
+Characters that are not on the selected keyboard at all (for example `é` on a German
+keyboard) are rejected instead of being typed wrong. If **Caps Lock** is on inside the
+guest, letters arrive with inverted case – turn it off before sending.
 
-- Characters that need AltGr (for example `@ € { [ ] } \ ~ |` on German)
-- Characters on the extra key next to left Shift (`< >` on most layouts, `\ |` on UK)
-- Characters that are not on the selected keyboard at all
+Layouts are defined as key tables in `src/extension/layout.ts`; new layouts are
+welcome.
 
-Support for AltGr characters is tracked in
-[#6](https://github.com/jonasesser/typethru/issues/6). Layouts are defined as key
-tables in `src/extension/layout.ts`; new layouts are welcome.
+#### How it works
+
+TypeThru sends raw scan codes through the console's own connection, the same way a
+physical keyboard would. If a console does not offer this (older vSphere versions),
+TypeThru falls back to the console's text input with layout conversion; AltGr
+characters and the key next to left Shift are then not available and are rejected.
 
 ### Console layout button
 
@@ -233,8 +234,8 @@ extension, so the shipped code stays readable for review.
 Bump the version in `package.json` (the manifest version is taken from it), then tag:
 
 ```
-git tag v0.9.0
-git push origin v0.9.0
+git tag v0.10.0
+git push origin v0.10.0
 ```
 
 The release workflow checks, tests and builds the tag and attaches the extension zip,

@@ -13,35 +13,32 @@ To test without installing the extension, use the DevTools test kit described in
 
 ## Test strings
 
-Full set, including AltGr characters and the `< >` key:
+German full set, including AltGr characters and the `< >` key:
 
 ```
-yzYZ!"§$%&/()=?ß+*#'-_.:,;äöüÄÖÜ@€{[]}\~|<>µ²³°^
+yzYZ!"§$%&/()=?ß+*#'-_.:,;äöüÄÖÜ@€{[]}\~|<>µ²³°^´`
 ```
 
-Supported with the German layout selected:
+All printable ASCII characters:
 
 ```
-yzYZ!"§$%&/()=?ß+*#'-_.:,;äöüÄÖÜ°^
-```
-
-A US-only string (for US guests):
-
-```
-abcXYZ0123!@#$%^&*()-_=+[]{};:'",.<>/?\|`~
+!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
 ```
 
 ## Matrix
 
-Send the string with the extension, the bookmarklet or `dist/tools/send-test-string.js` and compare what appears in the editor.
+Send the string with the extension, the bookmarklet or the test kit and compare what
+appears in the editor.
 
-| Guest layout | Enforce US layout (console button) | TypeThru layout | String | Expected |
+| Guest layout | TypeThru layout | Method | String | Expected |
 |---|---|---|---|---|
-| DE | off | German | supported set | exact match |
-| DE | off | German | full set | rejected by TypeThru |
-| DE | on | US (no conversion) | full set | to be determined (#6) |
-| DE | off | US (no conversion) | full set | wrong characters on DE-specific keys |
-| US | off | US (no conversion) | US-only string | exact match |
-| other | off | matching layout | letters, digits, punctuation of that layout | exact match |
+| DE | German | scan codes | German full set | exact match |
+| DE | German | scan codes | printable ASCII | exact match |
+| US | US | scan codes | printable ASCII | exact match |
+| other | matching layout | scan codes | printable ASCII and the layout's own characters | exact match |
+| DE | German | fallback | German full set | AltGr characters and `< >` rejected |
+
+"Enforce US Keyboard Layout" should not change the result with scan codes; test it
+once with the switch on.
 
 Record the result for each row (browser, vSphere version, guest OS) in the related issue.

@@ -32,8 +32,8 @@ Type `typethru.help()` for all commands.
 ## Everyday use
 
 ```js
-typethru.send('Secret!', 'de')   // German guest: convert and send
-typethru.send('Secret!', 'us')   // US guest: send as-is
+typethru.send('P@ss{1}', 'de')   // German guest
+typethru.send('P@ss{1}', 'us')   // US guest
 typethru.prompt('de')            // enter the text in a dialog instead
 typethru.check('P@ss{1}', 'de')  // check whether every character can be typed
 ```
@@ -56,9 +56,7 @@ The text is sent line by line; every line break presses Enter. Type into an edit
 inside the VM (Notepad, PowerShell ISE, nano) rather than a shell, where every line
 runs immediately. Use `enter: true` to press Enter after the last line too.
 
-Scripts often contain `{ } [ ] \ | @`. On a **German** guest, characters that need
-AltGr are not supported with conversion yet (#6) – check first with
-`typethru.check(myText, 'de')`.
+`typethru.check(myText, 'de')` shows whether every character is on the keyboard layout.
 
 ## Password test on the login screen
 
@@ -66,54 +64,46 @@ Use this to check whether a password arrives correctly before you are logged in.
 Nothing is sent with Enter, so a wrong result does not count as a failed login.
 
 1. In the VM, click into the password field of the login screen.
-2. Run one of the two tests and enter the password in the dialog:
+2. Run the test and enter the password in the dialog:
 
    ```js
-   await typethru.password()            // Enforce US OFF + German conversion (current behaviour)
-   await typethru.password('enforce')   // Enforce US ON + no conversion (candidate fix, #6)
+   await typethru.password()             // scan codes – all characters incl. AltGr
+   await typethru.password('fallback')   // previous method, for comparison (no AltGr characters)
    ```
 
 3. Within 3 seconds, click into the password field again if needed.
 4. Click the eye icon in the password field (Windows 10/11) to reveal the password and
    compare it. Then clear the field or press Enter yourself if it is correct.
 
-The dialog keeps the password out of the DevTools console history. Passwords with
-`@ { } [ ] \ ~ | < >` show the difference between the two modes best: the first test
-rejects them, the second one shows whether Enforce US solves it.
+The dialog keeps the password out of the DevTools console history. Make sure Caps Lock
+is off in the VM.
 
 Do **not** use `typethru.test()` on the login screen: it presses Enter after every
 line, which counts as failed logins and can lock the account.
 
 ## Test cases (text editor)
 
-`typethru.tests()` lists the cases, `typethru.test('T3')` runs one case,
-`typethru.test()` runs all of them. Each case switches the console's
-**Enforce US Keyboard Layout** button to the required state, then types one line into
-the guest editor, starting with the case id. The DevTools console shows what was sent
-and what is expected.
+`typethru.tests()` lists the cases, `typethru.test('T1')` runs one case,
+`typethru.test()` runs all of them. Each case types one line into the guest editor,
+starting with the case id. The DevTools console shows what was sent and what is
+expected.
 
 Run them in a visible text editor inside the VM (Notepad, gedit, …), never on a login
 screen or in a shell: each line ends with Enter. The cases assume a guest with a
 **German** keyboard layout.
 
-| Case | Enforce US | Sent | Checks | Expected in the guest |
-|---|---|---|---|---|
-| T1 | OFF | converted (de) | supported characters | `yzYZ!"§$%&/()=?ß+*#'-_.:,;äöüÄÖÜ°` |
-| T2 | OFF | converted (de) | dead keys | `` ^´` `` |
-| T3 | ON | raw | AltGr and `< >` characters | `@€{[]}\~\|<>µ²³` (to be determined) |
-| T4 | ON | raw | full set | supported + AltGr characters (to be determined) |
-| T5 | OFF | raw | baseline | wrong characters on German keys (the original problem) |
-| T6 | ON | converted (de) | conversion combined with Enforce US | to be determined |
-
-T3, T4 and T6 answer the open question in
-[#6](https://github.com/jonasesser/typethru/issues/6): if T3 and T4 arrive correctly,
-"Enforce US Keyboard Layout" + sending without conversion supports every character,
-including AltGr characters.
+| Case | Method | Checks | Expected in the guest |
+|---|---|---|---|
+| T1 | scan codes | German full set incl. AltGr and `< >` | `yzYZ!"§$%&/()=?ß+*#'-_.:,;äöüÄÖÜ°@€{[]}\~\|<>µ²³` |
+| T2 | scan codes | dead keys | `` ^´` `` |
+| T3 | scan codes | all printable ASCII | `!"#$%&'()*+,-./0-9:;<=>?@A-Z[\]^_`a-z{\|}~` |
+| T4 | fallback | supported characters with the previous method | `yzYZ!"§$%&/()=?ß+*#'-_.:,;äöüÄÖÜ°` |
+| T5 | fallback, no conversion | baseline | wrong characters on German keys (the original problem) |
 
 ## Reporting results
 
-For each case, note what appeared in the guest editor and add it to issue #6 together
-with:
+For each case, note what appeared in the guest editor and add it to a new issue
+together with:
 
 - the output of `typethru.diagnose()`
 - browser and version
@@ -121,6 +111,3 @@ with:
 - guest OS and its keyboard layout
 
 Do not include real passwords, hostnames or company names.
-
-When you are done, switch **Enforce US Keyboard Layout** back to the state you normally
-use (`typethru.enforce(false)` or `typethru.enforce(true)`).
