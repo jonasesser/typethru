@@ -1,7 +1,8 @@
 import { isHostAllowed } from './hosts';
 import { LAYOUT_CHOICES, convertText } from './layout';
-import { cancelJob, detectConsole, diagnoseConsole, jobStatus, setEnforce, startJob, typeIntoConsole } from './page';
-import { SPEEDS, chunkText, estimateSeconds, isSpeed, prepareScript, scriptStats } from './script';
+import { textToStrokes } from './keystrokes';
+import { cancelJob, detectConsole, diagnoseConsole, jobStatus, setEnforce, startJob, startKeyJob, typeIntoConsole } from './page';
+import { LINE_STROKE_DELAY_MS, SPEEDS, chunkText, estimateSeconds, isSpeed, prepareScript, scriptStats } from './script';
 import { loadSettings, saveLayout, savePrefs, type Settings } from './settings';
 import { STATUS, statusForAccessError, statusNotAllowed, statusReady, type StatusInfo } from './status';
 import type { DetectResult, DiagnosticsReport, EnforceResult, JobStatus, PageResult } from './wmks';
@@ -11,6 +12,8 @@ interface Target {
   frameId: number;
   origin: string;
   host: string;
+  /** Raw scan codes available: types AltGr characters correctly. */
+  scanCodes: boolean;
 }
 
 function el<T extends HTMLElement = HTMLElement>(id: string): T {
@@ -55,6 +58,8 @@ let mode: Mode = 'line';
 let ready = false;
 let jobRunning = false;
 let pollTimer: ReturnType<typeof setTimeout> | undefined;
+/** Close the popup when the running job finishes (single-line send). */
+let closeWhenDone = false;
 
 function setStatus(msg: string, ok: boolean): void {
   ui.status.textContent = msg;
@@ -111,7 +116,15 @@ function updateStats(): void {
     stripIndent: ui.stripIndent.checked,
     trailingEnter: ui.trailingEnter.checked,
   });
-  const secs = estimateSeconds(chunkText(prepared).length, isSpeed(ui.speed.value) ? ui.speed.value : 'normal');
+  const speed = isSpeed(ui.speed.value) ? ui.speed.value : 'normal';
+  let secs: number;
+  try {
+    secs = target?.scanCodes
+      ? estimateSeconds(textToStrokes(prepared, ui.layout.value).length, speed, true)
+      : estimateSeconds(chunkText(prepared).length, speed);
+  } catch {
+    secs = estimateSeconds([...prepared].length, speed, true);
+  }
   ui.scriptStats.textContent = `${lines} line${lines === 1 ? '' : 's'} · ${chars} chars · ~${secs} s`;
 }
 
@@ -134,7 +147,7 @@ async function init(settings: Settings): Promise<void> {
 
     const hit = hits[0];
     const res = hit.result as DetectResult;
-    const candidate: Target = { tabId: tab.id, frameId: hit.frameId, origin: res.origin, host: res.host ?? '' };
+    const candidate: Target = { tabId: tab.id, frameId: hit.frameId, origin: res.origin, host: res.host ?? '', scanCodes: !!res.scanCodes };
     if (!isHostAllowed(candidate.host, settings.allowedHosts)) {
       return showTarget(statusNotAllowed(candidate.host, settings.hostsManaged));
     }
@@ -174,7 +187,17 @@ async function sendLine(): Promise<void> {
   const text = ui.text.value;
   if (!text) return setStatus('Please enter some text.', false);
 
-  // Conversion happens here in the extension, not in the page.
+  // Preferred: raw scan codes (all characters of the layout, including AltGr)
+  if (target.scanCodes) {
+    let strokes: number[][];
+    try { strokes = textToStrokes(text, ui.layout.value).map(s => [...s]); } catch (e) { return setStatus(errorMessage(e), false); }
+    ui.text.value = '';
+    closeWhenDone = true;
+    await runKeyJob(strokes, LINE_STROKE_DELAY_MS);
+    return;
+  }
+
+  // Fallback: sendInputString with conversion (no AltGr characters)
   let out: string;
   try { out = convertText(text, ui.layout.value); } catch (e) { return setStatus(errorMessage(e), false); }
 
@@ -199,6 +222,32 @@ async function sendLine(): Promise<void> {
   } catch (e) {
     setStatus('Error: ' + errorMessage(e), false);
     ui.send.disabled = false;
+  }
+}
+
+/** Starts a scan code job in the page and follows its progress. */
+async function runKeyJob(strokes: number[][], delayMs: number): Promise<void> {
+  if (!target) return;
+  clearStatus();
+  try {
+    const [res] = await chrome.scripting.executeScript({
+      target: { tabId: target.tabId, frameIds: [target.frameId] },
+      world: 'MAIN',
+      func: startKeyJob,
+      args: [strokes, delayMs],
+    });
+    const r = res?.result as (JobStatus | PageResult | undefined);
+    if (!r || ('ok' in r && !r.ok)) {
+      closeWhenDone = false;
+      return setStatus((r && 'msg' in r && r.msg) || 'Failed.', false);
+    }
+    jobRunning = true;
+    updateControls();
+    showJob(r as JobStatus);
+    void pollJob();
+  } catch (e) {
+    closeWhenDone = false;
+    setStatus('Error: ' + errorMessage(e), false);
   }
 }
 
@@ -261,7 +310,15 @@ async function pollJob(): Promise<void> {
     // Show finished jobs only if this popup started or watched them
     if (s.running || wasRunning) showJob(s);
     if (s.running) pollTimer = setTimeout(() => void pollJob(), 250);
-    else if (wasRunning && !s.cancelled && !s.error) setStatus('Script sent.', true);
+    else if (wasRunning && !s.cancelled && !s.error) {
+      if (closeWhenDone) {
+        setStatus('Sent.', true);
+        setTimeout(() => window.close(), 600);
+      } else {
+        setStatus('Script sent.', true);
+      }
+    }
+    if (!s.running) closeWhenDone = false;
   } catch {
     /* tab closed or navigated */
   }
@@ -275,11 +332,18 @@ async function sendScript(): Promise<void> {
   });
   if (!prepared) return setStatus('Please enter a script.', false);
 
+  const speed = isSpeed(ui.speed.value) ? ui.speed.value : 'normal';
+
+  if (target.scanCodes) {
+    let strokes: number[][];
+    try { strokes = textToStrokes(prepared, ui.layout.value).map(s => [...s]); } catch (e) { return setStatus(errorMessage(e), false); }
+    return runKeyJob(strokes, SPEEDS[speed].strokeDelayMs);
+  }
+
   let converted: string;
   try { converted = convertText(prepared, ui.layout.value); } catch (e) { return setStatus(errorMessage(e), false); }
 
   const chunks = chunkText(converted);
-  const speed = isSpeed(ui.speed.value) ? ui.speed.value : 'normal';
   clearStatus();
   try {
     const [res] = await chrome.scripting.executeScript({
@@ -345,7 +409,7 @@ ui.diag.addEventListener('toggle', async () => {
     allowedHosts: currentSettings
       ? { count: currentSettings.allowedHosts.length, managed: currentSettings.hostsManaged }
       : null,
-    target: target ? { origin: target.origin, frameId: target.frameId } : null,
+    target: target ? { origin: target.origin, frameId: target.frameId, scanCodes: target.scanCodes } : null,
   };
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

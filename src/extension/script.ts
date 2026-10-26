@@ -7,11 +7,18 @@ export interface ScriptOptions {
   trailingEnter: boolean;
 }
 
+/**
+ * Pauses: `delayMs` between text chunks (sendInputString fallback),
+ * `strokeDelayMs` between single key strokes (scan codes).
+ */
 export const SPEEDS = {
-  fast: { label: 'Fast', delayMs: 15 },
-  normal: { label: 'Normal', delayMs: 60 },
-  slow: { label: 'Slow', delayMs: 200 },
+  fast: { label: 'Fast', delayMs: 15, strokeDelayMs: 4 },
+  normal: { label: 'Normal', delayMs: 60, strokeDelayMs: 12 },
+  slow: { label: 'Slow', delayMs: 200, strokeDelayMs: 40 },
 } as const;
+
+/** Pause between key strokes for single-line text (passwords). */
+export const LINE_STROKE_DELAY_MS = 8;
 
 export type Speed = keyof typeof SPEEDS;
 
@@ -61,7 +68,8 @@ export function scriptStats(text: string): ScriptStats {
   };
 }
 
-/** Rough duration in seconds for sending the chunks at the given speed. */
-export function estimateSeconds(chunkCount: number, speed: Speed): number {
-  return Math.ceil((chunkCount * SPEEDS[speed].delayMs) / 1000);
+/** Rough duration in seconds for sending chunks (or key strokes) at the given speed. */
+export function estimateSeconds(count: number, speed: Speed, strokes = false): number {
+  const ms = strokes ? SPEEDS[speed].strokeDelayMs : SPEEDS[speed].delayMs;
+  return Math.ceil((count * ms) / 1000);
 }

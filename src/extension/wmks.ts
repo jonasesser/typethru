@@ -4,6 +4,11 @@
 export interface WmksWidget {
   sendInputString(text: string): void;
   option?(name: string): unknown;
+  /** Internal VNC decoder; onKeyVScan(scanCode, down) sends a raw key event. */
+  _vncDecoder?: {
+    onKeyVScan?(scanCode: number, down: number): void;
+    _serverInitialized?: boolean;
+  };
 }
 
 export interface JQueryLike {
@@ -31,6 +36,8 @@ export interface DetectResult {
   host?: string;
   /** State of the console's "Enforce US Keyboard Layout" button, null if not present. */
   enforced?: boolean | null;
+  /** True if raw scan codes can be sent (needed for AltGr characters). */
+  scanCodes?: boolean;
 }
 
 export interface EnforceResult extends PageResult {

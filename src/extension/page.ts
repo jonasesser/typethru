@@ -24,9 +24,19 @@ export function detectConsole(): DetectResult {
     }
   }
 
+  let scanCodes = false;
+  if (found) {
+    outer2: for (const el of document.querySelectorAll('*')) {
+      for (const v of Object.values($.data(el) ?? {})) {
+        const w = v as WmksWidget;
+        if (isWidget(w)) { scanCodes = typeof w._vncDecoder?.onKeyVScan === 'function'; break outer2; }
+      }
+    }
+  }
+
   const kb = document.getElementById('keyboard');
   const enforced = kb ? /^\s*stop/i.test(kb.textContent ?? '') : null;
-  return { found, origin: location.origin, host: location.hostname, enforced };
+  return { found, origin: location.origin, host: location.hostname, enforced, scanCodes };
 }
 
 /** Sends text to the console as keystrokes. */
@@ -157,7 +167,7 @@ export function jobStatus(): JobStatus | null {
 
 /** Stops the current script job after the chunk that is being sent. */
 export function cancelJob(): JobStatus | null {
-  type Job = JobStatus & { timer?: ReturnType<typeof setTimeout>; chunks: string[] };
+  type Job = JobStatus & { timer?: ReturnType<typeof setTimeout>; chunks?: string[]; strokes?: number[][] };
   const job = (window as unknown as { __typethruJob?: Job }).__typethruJob;
   if (!job) return null;
   if (job.running) {
@@ -165,6 +175,54 @@ export function cancelJob(): JobStatus | null {
     if (job.timer) clearTimeout(job.timer);
     job.running = false;
     job.chunks = [];
+    job.strokes = [];
   }
   return { running: job.running, sent: job.sent, total: job.total, cancelled: job.cancelled, error: job.error };
+}
+
+/**
+ * Starts typing key strokes as raw scan codes with a pause between strokes. Each stroke
+ * presses its keys in order and releases them in reverse order in one step, so no
+ * modifier stays pressed between strokes, on cancel or on errors. Runs in the page,
+ * so it continues when the popup closes. Only one job at a time.
+ */
+export function startKeyJob(strokes: number[][], delayMs: number): JobStatus | PageResult {
+  type Job = JobStatus & { timer?: ReturnType<typeof setTimeout>; strokes: number[][] };
+  const w = window as unknown as { __typethruJob?: Job };
+  if (w.__typethruJob?.running) return { ok: false, msg: 'Text is already being sent.' };
+
+  const $ = window.jQuery;
+  let widget: WmksWidget | null = null;
+  if ($) {
+    outer: for (const el of document.querySelectorAll('*')) {
+      for (const v of Object.values($.data(el) ?? {})) {
+        if (v && typeof (v as WmksWidget).sendInputString === 'function') { widget = v as WmksWidget; break outer; }
+      }
+    }
+  }
+  const decoder = widget?._vncDecoder;
+  if (!decoder || typeof decoder.onKeyVScan !== 'function') return { ok: false, msg: 'Console does not accept scan codes.' };
+  const vscan = decoder.onKeyVScan.bind(decoder);
+
+  const job: Job = { running: true, sent: 0, total: strokes.length, cancelled: false, strokes };
+  w.__typethruJob = job;
+
+  const finish = (): void => { job.running = false; job.strokes = []; };
+  const step = (): void => {
+    if (job.cancelled || job.sent >= job.total) return finish();
+    const stroke = job.strokes[job.sent];
+    const pressed: number[] = [];
+    try {
+      for (const code of stroke) { vscan(code, 1); pressed.push(code); }
+    } catch (e) {
+      job.error = e instanceof Error ? e.message : String(e);
+    } finally {
+      for (const code of pressed.reverse()) { try { vscan(code, 0); } catch { /* ignore */ } }
+    }
+    if (job.error) return finish();
+    job.sent++;
+    job.timer = setTimeout(step, delayMs);
+  };
+  step();
+  return { running: job.running, sent: job.sent, total: job.total, cancelled: false, error: job.error };
 }
