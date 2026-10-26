@@ -150,6 +150,8 @@ src/
   bookmarklet/    Bookmarklet source
   tools/          DevTools scripts for diagnostics and manual tests
 scripts/build.ts  Build script
+assets/           Logo and banner
+store/            Store listing texts, privacy policy and store graphics
 test/             Unit tests and manual test matrix
 ```
 
