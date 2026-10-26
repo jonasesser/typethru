@@ -6,8 +6,9 @@ The vSphere HTML5 web console has no clipboard support for the guest. TypeThru i
 small browser extension that sends text to the console as keystrokes, so you don't
 have to type long passwords, commands or license keys by hand.
 
-It also handles a common problem for non-US users: when the guest uses a German
-keyboard layout, it converts the text so the right characters arrive.
+It also handles a common problem for non-US users: when the guest uses another
+keyboard layout (German, Swiss German, French, UK, Spanish, Italian), it converts the
+text so the right characters arrive.
 
 > TypeThru is an independent project and is not affiliated with or endorsed by
 > Broadcom or VMware. vSphere and vCenter are trademarks of their respective owners.
@@ -23,7 +24,7 @@ keyboard layout, it converts the text so the right characters arrive.
 ## Features
 
 - Sends text to the web console as keystrokes
-- Optional German (DE) → US keyboard layout conversion
+- Keyboard layout conversion for German, Swiss German, French (AZERTY), UK, Spanish and Italian guests
 - Shows and switches the console's own "Enforce US Keyboard Layout" button
 - Shows the target before sending, optional host allowlist
 - Minimal permissions, no network access, nothing stored
@@ -61,17 +62,34 @@ sending a password.
 
 ## Keyboard layouts
 
-The console sends characters as US key positions. If the guest uses a German layout,
-enable **Convert German (DE) → US layout**: each character is replaced by the US
-character on the same physical key. Turn it off for US guests. The setting is
+The console sends characters as US key positions. Select the guest's layout under
+**Guest keyboard layout** and TypeThru replaces each character with the US character
+on the same physical key, so the guest receives what you typed. The selection is
 remembered.
 
-With conversion enabled, these characters are rejected instead of being typed wrong:
+| Layout | Notes |
+|---|---|
+| US (no conversion) | Text is sent as-is |
+| German (Germany, Austria) | |
+| Swiss German | |
+| French (AZERTY) | |
+| English (UK) | |
+| Spanish | |
+| Italian | |
 
-- Characters that need AltGr: `@ € { [ ] } \ ~ | µ ² ³`
-- The ISO `< >` key
+Dead keys (for example `^`, `´`, `` ` ``, `¨`) are sent followed by a space so the
+character itself appears.
 
-Support for these is tracked in [#6](https://github.com/jonasesser/typethru/issues/6).
+With conversion, some characters cannot be sent and are rejected instead of being
+typed wrong:
+
+- Characters that need AltGr (for example `@ € { [ ] } \ ~ |` on German)
+- Characters on the extra key next to left Shift (`< >` on most layouts, `\ |` on UK)
+- Characters that are not on the selected keyboard at all
+
+Support for AltGr characters is tracked in
+[#6](https://github.com/jonasesser/typethru/issues/6). Layouts are defined as key
+tables in `src/extension/layout.ts`; new layouts are welcome.
 
 ### Console layout button
 
@@ -86,8 +104,8 @@ Restrict TypeThru to your own vCenter hosts in `src/extension/popup.ts`:
 const ALLOWED_HOSTS: string[] = ['vcenter.example.local'];
 ```
 
-Rebuild and reload the extension after changing it. An empty list (default) accepts any page with
-a web console.
+Rebuild and reload the extension after changing it. An empty list (default) accepts
+any page with a web console.
 
 ## Bookmarklet
 
@@ -95,7 +113,7 @@ The bookmarklet offers the core function without installing anything:
 
 - Built from [`src/bookmarklet/typethru.ts`](src/bookmarklet/typethru.ts); it uses
   the same layout module as the extension
-- Two variants: with DE → US conversion and without
+- One bookmarklet per guest layout
 - The browser's input dialog shows the text in clear text
 - No control of the console layout button
 
@@ -151,8 +169,8 @@ troubleshooting (paste them into the DevTools console of the console tab):
 | No vSphere web console found in this tab. | Open the VM with **Launch Web Console** and use TypeThru in that tab. |
 | More than one console found in this tab. | Open each console in its own tab. |
 | Cannot access this tab | The browser blocks extensions on this page (for example `chrome://` pages). |
-| Not supported (AltGr / <> key) | The text contains a character that cannot be sent with conversion enabled. |
-| Wrong characters in the guest | Match the conversion setting to the guest's keyboard layout. |
+| Not supported with this layout | The text contains a character that cannot be typed with the selected guest layout. |
+| Wrong characters in the guest | Select the guest's keyboard layout in the popup. |
 | "Load unpacked" does nothing | Your browser may be managed by a policy that blocks unpacked extensions. Use the bookmarklet or ask your administrator. |
 
 Please include the output of `dist/tools/console-diagnostics.js` when reporting a
@@ -161,7 +179,7 @@ problem.
 ## Roadmap
 
 - Multi-line input (send line by line with Enter)
-- More layouts (Swiss German, French, UK, …)
+- More layouts (Nordic, Belgian, …)
 - Adjustable typing speed for slow guests
 - Command snippets (never passwords)
 - Chrome Web Store and Edge Add-ons releases

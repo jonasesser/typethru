@@ -16,7 +16,7 @@ Full set, including AltGr characters and the `< >` key:
 yzYZ!"§$%&/()=?ß+*#'-_.:,;äöüÄÖÜ@€{[]}\~|<>µ²³°^
 ```
 
-Supported with DE → US conversion:
+Supported with the German layout selected:
 
 ```
 yzYZ!"§$%&/()=?ß+*#'-_.:,;äöüÄÖÜ°^
@@ -32,12 +32,13 @@ abcXYZ0123!@#$%^&*()-_=+[]{};:'",.<>/?\|`~
 
 Send the string with the extension, the bookmarklet or `dist/tools/send-test-string.js` and compare what appears in the editor.
 
-| Guest layout | Enforce US layout (console button) | TypeThru conversion | String | Expected |
+| Guest layout | Enforce US layout (console button) | TypeThru layout | String | Expected |
 |---|---|---|---|---|
-| DE | off | on | supported set | exact match |
-| DE | off | on | full set | rejected by TypeThru |
-| DE | on | off | full set | to be determined (#6) |
-| DE | off | off | full set | wrong characters on DE-specific keys |
-| US | off | off | US-only string | exact match |
+| DE | off | German | supported set | exact match |
+| DE | off | German | full set | rejected by TypeThru |
+| DE | on | US (no conversion) | full set | to be determined (#6) |
+| DE | off | US (no conversion) | full set | wrong characters on DE-specific keys |
+| US | off | US (no conversion) | US-only string | exact match |
+| other | off | matching layout | letters, digits, punctuation of that layout | exact match |
 
 Record the result for each row (browser, vSphere version, guest OS) in the related issue.
