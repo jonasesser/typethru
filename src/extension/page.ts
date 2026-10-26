@@ -4,7 +4,7 @@
 // self-contained: no imports, no references to anything outside the function.
 // Only type imports are allowed (they disappear at build time).
 
-import type { DetectResult, DiagnosticsReport, EnforceResult, PageResult, WmksWidget } from './wmks';
+import type { DetectResult, DiagnosticsReport, EnforceResult, JobStatus, PageResult, WmksWidget } from './wmks';
 
 /** Finds the console and reads the layout button. Never receives the text. */
 export function detectConsole(): DetectResult {
@@ -101,4 +101,70 @@ export function diagnoseConsole(): DiagnosticsReport {
     report.layoutButton = { label, enforced: /^\s*stop/i.test(label) };
   }
   return report;
+}
+
+/**
+ * Starts sending the chunks one after another with a pause between them. The job runs
+ * in the page, so it continues when the popup closes. Only one job at a time.
+ * The chunks are kept in the page only until the job ends.
+ */
+export function startJob(chunks: string[], delayMs: number): JobStatus | PageResult {
+  type Job = JobStatus & { timer?: ReturnType<typeof setTimeout>; chunks: string[] };
+  const w = window as unknown as { __typethruJob?: Job };
+  if (w.__typethruJob?.running) return { ok: false, msg: 'A script is already being sent.' };
+
+  const $ = window.jQuery;
+  let widget: WmksWidget | null = null;
+  if ($) {
+    outer: for (const el of document.querySelectorAll('*')) {
+      for (const v of Object.values($.data(el) ?? {})) {
+        if (v && typeof (v as WmksWidget).sendInputString === 'function') { widget = v as WmksWidget; break outer; }
+      }
+    }
+  }
+  if (!widget) return { ok: false, msg: 'Console not found.' };
+  const target = widget;
+
+  const job: Job = { running: true, sent: 0, total: chunks.length, cancelled: false, chunks };
+  w.__typethruJob = job;
+
+  const step = (): void => {
+    if (job.cancelled || job.sent >= job.total) {
+      job.running = false;
+      job.chunks = [];
+      return;
+    }
+    try {
+      target.sendInputString(job.chunks[job.sent]);
+      job.sent++;
+      job.timer = setTimeout(step, delayMs);
+    } catch (e) {
+      job.error = e instanceof Error ? e.message : String(e);
+      job.running = false;
+      job.chunks = [];
+    }
+  };
+  step();
+  return { running: job.running, sent: job.sent, total: job.total, cancelled: false };
+}
+
+/** Progress of the current or last script job, null if there was none. */
+export function jobStatus(): JobStatus | null {
+  const job = (window as unknown as { __typethruJob?: JobStatus }).__typethruJob;
+  if (!job) return null;
+  return { running: job.running, sent: job.sent, total: job.total, cancelled: job.cancelled, error: job.error };
+}
+
+/** Stops the current script job after the chunk that is being sent. */
+export function cancelJob(): JobStatus | null {
+  type Job = JobStatus & { timer?: ReturnType<typeof setTimeout>; chunks: string[] };
+  const job = (window as unknown as { __typethruJob?: Job }).__typethruJob;
+  if (!job) return null;
+  if (job.running) {
+    job.cancelled = true;
+    if (job.timer) clearTimeout(job.timer);
+    job.running = false;
+    job.chunks = [];
+  }
+  return { running: job.running, sent: job.sent, total: job.total, cancelled: job.cancelled, error: job.error };
 }

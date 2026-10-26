@@ -48,3 +48,12 @@ export interface DiagnosticsReport {
   layoutButton: { label: string; enforced: boolean } | null;
   keyboardLayoutId: unknown;
 }
+
+/** State of a running script job in the page. Contains no text. */
+export interface JobStatus {
+  running: boolean;
+  sent: number;
+  total: number;
+  cancelled: boolean;
+  error?: string;
+}
