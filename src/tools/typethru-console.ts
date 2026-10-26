@@ -126,7 +126,26 @@ async function promptSend(layout = 'de'): Promise<void> {
   if (text) await send(text, layout);
 }
 
-/** Runs one test case or all of them (one line per case in the guest editor). */
+/**
+ * Password test for the login screen: switches Enforce US, asks for the password in a
+ * dialog (not stored in the console history) and types it without pressing Enter.
+ *   mode 'current' – Enforce US OFF, German conversion (how the extension works today)
+ *   mode 'enforce' – Enforce US ON, no conversion (candidate fix for AltGr characters, #6)
+ */
+async function password(mode: 'current' | 'enforce' = 'current', layout = 'de'): Promise<void> {
+  const useEnforce = mode === 'enforce';
+  await enforce(useEnforce);
+  const sendLayout = useEnforce ? NO_CONVERSION : layout;
+  const text = prompt(`TypeThru password test (${useEnforce ? 'Enforce US ON, no conversion' : `Enforce US OFF, layout ${layout}`}).\nThe password is typed without pressing Enter.`);
+  if (!text) return;
+  await send(text, sendLayout);
+  console.log('TypeThru: check the password with the eye icon in the password field, then press Enter yourself if it is correct.');
+}
+
+/**
+ * Runs one test case or all of them (one line per case in the guest editor).
+ * Presses Enter after each line – only use it in a text editor, never on a login screen or in a shell.
+ */
 async function test(id?: string, delayMs = 3000): Promise<void> {
   const cases = id ? CASES.filter(c => c.id.toLowerCase() === id.toLowerCase()) : CASES;
   if (!cases.length) throw new Error(`TypeThru: unknown test ${id}. Use typethru.tests() to list them.`);
@@ -169,8 +188,11 @@ function help(): void {
   typethru.check(text, layout = 'de')  show whether all characters can be typed
   typethru.enforce()                   show the state of "Enforce US Keyboard Layout"
   typethru.enforce(true | false)       switch it on or off
+  typethru.password()                  login screen: Enforce US OFF + German conversion, no Enter
+  typethru.password('enforce')         login screen: Enforce US ON, no conversion, no Enter
   typethru.tests()                     list the test cases
-  typethru.test('T3')                  run one test case, typethru.test() runs all
+  typethru.test('T3')                  text editor only: run one case, typethru.test() runs all
+                                       (presses Enter – never use on a login screen or in a shell)
   typethru.diagnose()                  diagnostics report
   typethru.layouts()                   available layout ids
 
@@ -183,6 +205,7 @@ const api = {
   send,
   raw,
   prompt: promptSend,
+  password,
   check,
   enforce,
   tests,

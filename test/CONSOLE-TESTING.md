@@ -39,7 +39,31 @@ After running a command you have **3 seconds** to click into the editor inside t
 
 Layout ids: `us`, `de`, `de-ch`, `fr`, `uk`, `es`, `it`.
 
-## Test cases
+## Password test on the login screen
+
+Use this to check whether a password arrives correctly before you are logged in.
+Nothing is sent with Enter, so a wrong result does not count as a failed login.
+
+1. In the VM, click into the password field of the login screen.
+2. Run one of the two tests and enter the password in the dialog:
+
+   ```js
+   await typethru.password()            // Enforce US OFF + German conversion (current behaviour)
+   await typethru.password('enforce')   // Enforce US ON + no conversion (candidate fix, #6)
+   ```
+
+3. Within 3 seconds, click into the password field again if needed.
+4. Click the eye icon in the password field (Windows 10/11) to reveal the password and
+   compare it. Then clear the field or press Enter yourself if it is correct.
+
+The dialog keeps the password out of the DevTools console history. Passwords with
+`@ { } [ ] \ ~ | < >` show the difference between the two modes best: the first test
+rejects them, the second one shows whether Enforce US solves it.
+
+Do **not** use `typethru.test()` on the login screen: it presses Enter after every
+line, which counts as failed logins and can lock the account.
+
+## Test cases (text editor)
 
 `typethru.tests()` lists the cases, `typethru.test('T3')` runs one case,
 `typethru.test()` runs all of them. Each case switches the console's
@@ -47,7 +71,9 @@ Layout ids: `us`, `de`, `de-ch`, `fr`, `uk`, `es`, `it`.
 the guest editor, starting with the case id. The DevTools console shows what was sent
 and what is expected.
 
-The cases assume a guest with a **German** keyboard layout.
+Run them in a visible text editor inside the VM (Notepad, gedit, …), never on a login
+screen or in a shell: each line ends with Enter. The cases assume a guest with a
+**German** keyboard layout.
 
 | Case | Enforce US | Sent | Checks | Expected in the guest |
 |---|---|---|---|---|
