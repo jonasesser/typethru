@@ -35,7 +35,22 @@ function detectConsole() {
       }
     }
   }
-  return { found, origin: location.origin, host: location.hostname };
+  // State of the console's own "Enforce US Keyboard Layout" button (null = not present)
+  const kb = document.getElementById('keyboard');
+  const enforced = kb ? /^\s*stop/i.test(kb.textContent) : null;
+  return { found, origin: location.origin, host: location.hostname, enforced };
+}
+
+// Clicks the console's "Enforce / Stop Enforcing US Keyboard Layout" button if needed.
+async function setEnforce(want) {
+  const kb = document.getElementById('keyboard');
+  if (!kb) return { ok: false, msg: 'Keyboard layout button not found.' };
+  const isOn = () => /^\s*stop/i.test(kb.textContent);
+  if (isOn() !== want) {
+    kb.click();
+    await new Promise(r => setTimeout(r, 300));
+  }
+  return { ok: isOn() === want, enforced: isOn() };
 }
 
 function typeIntoConsole(str) {
@@ -90,6 +105,10 @@ async function init() {
     }
     el('target').textContent = 'Target: ' + target.origin;
     el('send').disabled = false;
+    if (h.result.enforced !== null) {
+      el('enforce').checked = h.result.enforced;
+      el('enforce').disabled = false;
+    }
   } catch (e) {
     el('target').textContent = 'Cannot access this tab: ' + e.message;
   }
@@ -105,6 +124,24 @@ try {
 } catch (e) {}
 el('convert').onchange = () => {
   try { localStorage.setItem('convert', el('convert').checked ? '1' : '0'); } catch (e) {}
+};
+
+el('enforce').onchange = async () => {
+  if (!target) return;
+  const want = el('enforce').checked;
+  try {
+    const [res] = await chrome.scripting.executeScript({
+      target: { tabId: target.tabId, frameIds: [target.frameId] },
+      world: 'MAIN',
+      func: setEnforce,
+      args: [want],
+    });
+    const r = res?.result || { ok: false, msg: 'No response.' };
+    if (typeof r.enforced === 'boolean') el('enforce').checked = r.enforced;
+    setStatus(r.ok ? `US layout enforcing ${r.enforced ? 'ON' : 'OFF'}` : (r.msg || 'Could not switch.'), r.ok);
+  } catch (e) {
+    setStatus('Error: ' + e.message, false);
+  }
 };
 
 el('send').onclick = async () => {

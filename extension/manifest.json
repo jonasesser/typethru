@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "TypeThru – Paste text into the vSphere web console",
   "short_name": "TypeThru",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Types text such as passwords, commands or license keys into the vSphere HTML5 web console, where copy and paste is not available.",
   "permissions": ["activeTab", "scripting"],
   "action": {
