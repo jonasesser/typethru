@@ -208,8 +208,8 @@ troubleshooting (paste them into the DevTools console of the console tab):
 | Wrong characters in the guest | Select the guest's keyboard layout in the popup. |
 | "Load unpacked" does nothing | Your browser may be managed by a policy that blocks unpacked extensions. Use the bookmarklet or ask your administrator. |
 
-Please include the output of `dist/tools/console-diagnostics.js` when reporting a
-problem.
+When reporting a problem, open **Diagnostics** at the bottom of the popup and copy
+the report into the issue. It never contains the text you entered.
 
 ## Roadmap
 

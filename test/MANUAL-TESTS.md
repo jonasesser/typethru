@@ -6,7 +6,7 @@ These checks need a real vSphere web console and are not covered by `npm test`.
 
 1. Open the VM with **Launch Web Console**.
 2. Inside the guest, open a visible text editor (Notepad, `nano`, …). Do not test in a password field.
-3. Optional: run `dist/tools/console-diagnostics.js` (after `npm run build`) in DevTools and keep the output.
+3. Optional: open **Diagnostics** in the TypeThru popup and keep the report.
 
 ## Test strings
 
