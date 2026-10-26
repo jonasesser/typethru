@@ -233,8 +233,8 @@ extension, so the shipped code stays readable for review.
 Bump the version in `package.json` (the manifest version is taken from it), then tag:
 
 ```
-git tag v0.6.0
-git push origin v0.6.0
+git tag v0.9.0
+git push origin v0.9.0
 ```
 
 The release workflow checks, tests and builds the tag and attaches the extension zip,
