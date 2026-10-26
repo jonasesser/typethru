@@ -2,6 +2,7 @@ import { isHostAllowed } from './hosts';
 import { LAYOUT_CHOICES, convertText } from './layout';
 import { detectConsole, diagnoseConsole, setEnforce, typeIntoConsole } from './page';
 import { loadSettings, saveLayout, type Settings } from './settings';
+import { STATUS, statusForAccessError, statusNotAllowed, statusReady, type StatusInfo } from './status';
 import type { DetectResult, DiagnosticsReport, EnforceResult, PageResult } from './wmks';
 
 interface Target {
@@ -19,6 +20,8 @@ function el<T extends HTMLElement = HTMLElement>(id: string): T {
 
 const ui = {
   target: el('target'),
+  targetTitle: el('targetTitle'),
+  targetDetail: el('targetDetail'),
   text: el<HTMLInputElement>('text'),
   show: el<HTMLInputElement>('show'),
   layout: el<HTMLSelectElement>('layout'),
@@ -37,6 +40,20 @@ function setStatus(msg: string, ok: boolean): void {
 
 const errorMessage = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
+function showTarget(info: StatusInfo): void {
+  ui.target.dataset.kind = info.kind;
+  ui.targetTitle.textContent = info.title;
+  ui.targetDetail.textContent = info.detail;
+  ui.targetDetail.hidden = !info.detail;
+}
+
+/** Enables the input only when there is a console to send to. */
+function setReady(ready: boolean): void {
+  ui.text.disabled = !ready;
+  ui.send.disabled = !ready;
+  if (ready) ui.text.focus();
+}
+
 let target: Target | null = null;
 let currentSettings: Settings | null = null;
 
@@ -52,33 +69,25 @@ async function init(settings: Settings): Promise<void> {
     });
     const hits = results.filter(r => (r.result as DetectResult | undefined)?.found);
 
-    if (hits.length === 0) {
-      ui.target.textContent = 'No vSphere web console found in this tab.';
-      return;
-    }
-    if (hits.length > 1) {
-      ui.target.textContent = 'More than one console found in this tab – open the console in its own tab.';
-      return;
-    }
+    if (hits.length === 0) return showTarget(STATUS.noConsole);
+    if (hits.length > 1) return showTarget(STATUS.multiple);
 
     const hit = hits[0];
     const res = hit.result as DetectResult;
     const candidate: Target = { tabId: tab.id, frameId: hit.frameId, origin: res.origin, host: res.host ?? '' };
     if (!isHostAllowed(candidate.host, settings.allowedHosts)) {
-      ui.target.textContent = `Host not allowed: ${candidate.host}. ` +
-        (settings.hostsManaged ? 'The allowed hosts are set by your organization.' : 'Add it in the options.');
-      return;
+      return showTarget(statusNotAllowed(candidate.host, settings.hostsManaged));
     }
 
     target = candidate;
-    ui.target.textContent = 'Target: ' + target.origin;
-    ui.send.disabled = false;
+    showTarget(statusReady(target.host));
+    setReady(true);
     if (typeof res.enforced === 'boolean') {
       ui.enforce.checked = res.enforced;
       ui.enforce.disabled = false;
     }
   } catch (e) {
-    ui.target.textContent = 'Cannot access this tab: ' + errorMessage(e);
+    showTarget(statusForAccessError(errorMessage(e)));
   }
 }
 
@@ -185,6 +194,8 @@ ui.send.addEventListener('click', async () => {
 });
 
 void (async () => {
+  showTarget(STATUS.loading);
+  setReady(false);
   const settings = await loadSettings();
   currentSettings = settings;
   ui.layout.value = settings.layout;
