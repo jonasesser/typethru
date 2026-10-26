@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   DE_TO_US,
-  UNSUPPORTED_DE,
   UnsupportedCharsError,
   convertDeToUs,
   unsupportedChars,
@@ -34,41 +33,54 @@ test('umlauts map to the keys they sit on', () => {
   assert.equal(convertDeToUs('Ü'), '{');
 });
 
-test('dead keys', () => {
+test('dead keys are sent as key + space', () => {
   assert.equal(convertDeToUs('^'), '` ');
+  assert.equal(convertDeToUs('´'), '= ');
+  assert.equal(convertDeToUs('`'), '+ ');
   assert.equal(convertDeToUs('°'), '~');
 });
 
-test('space and empty string', () => {
+test('space, newline, tab and empty string', () => {
   assert.equal(convertDeToUs(''), '');
-  assert.equal(convertDeToUs('a b'), 'a b');
+  assert.equal(convertDeToUs('a b\n\t'), 'a b\n\t');
 });
 
-test('unsupported characters are rejected, not converted', () => {
-  for (const c of UNSUPPORTED_DE) {
+test('AltGr characters and the ISO key are rejected', () => {
+  for (const c of '@€{[]}\\~|<>µ²³') {
     assert.throws(() => convertDeToUs('abc' + c), UnsupportedCharsError, `expected ${c} to be rejected`);
   }
 });
 
-test('error lists the offending characters', () => {
+test('characters that are not on a German keyboard are rejected', () => {
+  for (const c of 'éñåøçÿ€✓') {
+    assert.throws(() => convertDeToUs(c), UnsupportedCharsError, `expected ${c} to be rejected`);
+  }
+});
+
+test('error lists the offending characters once', () => {
   try {
-    convertDeToUs('a@b{');
+    convertDeToUs('a@b{@é');
     assert.fail('expected an error');
   } catch (e) {
     assert.ok(e instanceof UnsupportedCharsError);
-    assert.deepEqual(e.chars, ['@', '{']);
+    assert.deepEqual(e.chars, ['@', '{', 'é']);
   }
 });
 
-test('unsupportedChars reports each character once', () => {
-  assert.deepEqual(unsupportedChars('a@b@c{'), ['@', '{']);
+test('unsupportedChars', () => {
   assert.deepEqual(unsupportedChars('Passwort123!'), []);
+  assert.deepEqual(unsupportedChars('a@b@c{'), ['@', '{']);
 });
 
-test('mapping has no unsupported characters as keys', () => {
-  for (const k of Object.keys(DE_TO_US)) {
-    assert.ok(!UNSUPPORTED_DE.includes(k), `${k} is both mapped and unsupported`);
-  }
+test('generated map keeps all mappings of the original hand-written table', () => {
+  const original: Record<string, string> = {
+    y: 'z', z: 'y', Y: 'Z', Z: 'Y',
+    '"': '@', '§': '#', '&': '^', '/': '&', '(': '*', ')': '(', '=': ')',
+    'ß': '-', '?': '_', 'ü': '[', 'Ü': '{', '+': ']', '*': '}',
+    'ö': ';', 'Ö': ':', 'ä': "'", 'Ä': '"', '#': '\\', "'": '|',
+    ';': '<', ':': '>', '-': '/', '_': '?', '°': '~', '^': '` ',
+  };
+  for (const [k, v] of Object.entries(original)) assert.equal(DE_TO_US[k], v, `mapping for ${k}`);
 });
 
 test('supported part of the manual test string converts', () => {
