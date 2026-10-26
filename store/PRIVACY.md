@@ -14,7 +14,6 @@ requests and contains no analytics or tracking.
 
 The text you enter is usually authentication data (passwords), commands or scripts.
 
-
 - The text you type into the TypeThru popup (for example a password or a command) is
   passed only to the web console on the tab you are currently using.
 - The text is not saved, not logged and not sent to the developer or any third party.
