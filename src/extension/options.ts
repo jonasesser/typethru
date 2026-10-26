@@ -38,4 +38,6 @@ save.addEventListener('click', async () => {
   setStatus(list.length ? `Saved ${list.length} host(s).` : 'Saved. Every host is allowed.', true);
 });
 
+el('version').textContent = chrome.runtime.getManifest().version;
+
 void init();

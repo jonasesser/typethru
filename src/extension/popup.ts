@@ -393,6 +393,8 @@ ui.enforce.addEventListener('change', async () => {
   }
 });
 
+el('version').textContent = chrome.runtime.getManifest().version;
+
 void (async () => {
   showTarget(STATUS.loading);
   updateControls();
