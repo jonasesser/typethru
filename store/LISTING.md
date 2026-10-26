@@ -10,16 +10,19 @@ Field limits can change; check them in the developer dashboards when submitting.
 | Store icon / logo | 128×128 (96×96 artwork) | 300×300 | `images/chrome-store-icon-128.png`, `images/edge-logo-300.png` |
 | Small promo tile | 440×280 | 440×280 | `images/small-tile-440x280.png` |
 | Marquee / large promo tile | 1400×560 | 1400×560 | `images/marquee-1400x560.png` |
-| Screenshots | 1280×800 or 640×400, 1–5 | 1280×800 or 640×400, up to 6 | to do |
+| Screenshots | 1280×800, 1–5 | 1280×800, up to 6 | `images/screenshot-1-password.png` … `images/screenshot-5-status.png` |
 
-Suggested screenshots:
+Screenshots, in this order:
 
-1. Popup next to a web console with a login prompt ("Target" line visible)
-2. VM keyboard layout dropdown
-3. A command typed into a Linux shell through TypeThru
-4. Error message for an unsupported character
+1. `screenshot-1-password.png` – popup over a login screen, password field
+2. `screenshot-2-layouts.png` – keyboard layouts and AltGr characters (dark mode)
+3. `screenshot-3-scripts.png` – Script mode with progress
+4. `screenshot-4-admin.png` – settings page: allowed hosts and About
+5. `screenshot-5-status.png` – status when no web console is open
 
-Do not show real hostnames, user names or company names in screenshots.
+The popup in the screenshots is the real extension UI rendered with example data
+(`vcenter.example.com`); the VM screen behind it is an illustration. They show version
+1.0.0 – recreate them if the store release has another version.
 
 ## Common texts
 
