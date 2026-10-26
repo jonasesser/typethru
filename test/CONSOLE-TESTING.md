@@ -11,6 +11,9 @@ Either
   [latest release](https://github.com/jonasesser/typethru/releases/latest) and unzip it, or
 - build it: `npm install` and `npm run build`, then use `dist/tools/typethru-console.js`.
 
+Do not paste `src/tools/typethru-console.ts`: it is the TypeScript source and fails with
+"Cannot use import statement outside a module".
+
 ## Load it
 
 1. Open the VM with **Launch Web Console** (it opens in its own tab).
