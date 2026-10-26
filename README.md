@@ -32,6 +32,7 @@ text so the right characters arrive.
 ## Features
 
 - Sends text to the web console as keystrokes
+- Script mode for multi-line text with adjustable speed, progress and cancel
 - Keyboard layout conversion for German, Swiss German, French (AZERTY), UK, Spanish and Italian guests
 - Shows and switches the console's own "Enforce US Keyboard Layout" button
 - Shows the target before sending, host allowlist in the options or via enterprise policy
@@ -77,6 +78,28 @@ See [Development](#development).
 
 Test with a visible text field first (for example a text editor in the guest) before
 sending a password.
+
+### Scripts and multi-line text
+
+<p align="center"><img src="assets/popup-script.png" alt="Script mode" width="320"></p>
+
+Switch to **Script** in the popup to send PowerShell or shell scripts, configuration
+snippets or any multi-line text:
+
+- The text is sent line by line in small chunks. Choose **Fast**, **Normal** or
+  **Slow** if the guest drops characters.
+- A progress bar shows the state; **Cancel** stops after the current chunk. Sending
+  continues if the popup closes, and the progress is shown again when you reopen it.
+- **Remove indentation** strips leading spaces and tabs, for editors that indent on
+  their own (PowerShell ISE, VS Code, vim).
+- **Enter after last line** is off by default, so nothing runs by accident.
+- **Ctrl+Enter** sends, **Tab** inserts a tab.
+
+Every line break presses Enter. In a shell every line runs immediately, so for whole
+scripts type into an editor inside the VM and save the file there.
+
+On a German guest, characters that need AltGr (`{ } [ ] \ | @ ~`) are not supported
+with conversion yet, see [#6](https://github.com/jonasesser/typethru/issues/6).
 
 ## Keyboard layouts
 
@@ -249,7 +272,6 @@ the report into the issue. It never contains the text you entered.
 
 ## Roadmap
 
-- Multi-line input (send line by line with Enter)
 - More layouts (Nordic, Belgian, …)
 - Adjustable typing speed for slow guests
 - Command snippets (never passwords)

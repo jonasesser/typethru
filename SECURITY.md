@@ -18,6 +18,9 @@ can access, how the text is handled and which risks remain.
 ## Handling of the text
 
 - The text exists only in the popup's input field and in local variables.
+- In Script mode the prepared chunks are handed to the console page at once, so sending
+  can continue when the popup closes. They are kept in the page only until the script
+  is sent or cancelled, then discarded.
 - Detecting the console and reading the layout button never receives the text.
 - Layout conversion runs inside the extension, not in the web page.
 - The text is passed only to the single frame where the console was found.

@@ -71,6 +71,7 @@ Characters that cannot be typed with the selected layout are rejected with a cle
 
 FEATURES
 • Types any text into the vSphere web console
+• Script mode: multi-line text and scripts, line by line, with speed setting, progress and cancel
 • Keyboard layout conversion including dead keys
 • Shows and switches the console's "Enforce US Keyboard Layout" button
 • Shows the target page before sending
@@ -86,7 +87,7 @@ PRIVACY AND SECURITY
 
 USE CASES
 • Passwords on Windows and Linux login screens
-• Commands and one-liners in a shell or PowerShell
+• Commands, scripts and configuration snippets
 • License and product keys during OS installation
 • IP addresses, hostnames and domain-join details
 
