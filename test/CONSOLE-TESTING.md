@@ -39,6 +39,24 @@ After running a command you have **3 seconds** to click into the editor inside t
 
 Layout ids: `us`, `de`, `de-ch`, `fr`, `uk`, `es`, `it`.
 
+## Scripts and multi-line text
+
+```js
+typethru.script(`Get-Service
+Get-Process`, 'us')                                   // US guest
+typethru.script(myText, 'de', { speed: 'slow' })       // German guest, slow
+typethru.script(myText, 'us', { stripIndent: true })   // editor with auto-indent
+typethru.cancel()                                      // stop
+```
+
+The text is sent line by line; every line break presses Enter. Type into an editor
+inside the VM (Notepad, PowerShell ISE, nano) rather than a shell, where every line
+runs immediately. Use `enter: true` to press Enter after the last line too.
+
+Scripts often contain `{ } [ ] \ | @`. On a **German** guest, characters that need
+AltGr are not supported with conversion yet (#6) – check first with
+`typethru.check(myText, 'de')`.
+
 ## Password test on the login screen
 
 Use this to check whether a password arrives correctly before you are logged in.

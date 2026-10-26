@@ -15,7 +15,8 @@
 // See test/CONSOLE-TESTING.md for the full test procedure.
 
 import { LAYOUT_CHOICES, NO_CONVERSION, convertText, unsupportedChars } from '../extension/layout';
-import { diagnoseConsole } from '../extension/page';
+import { cancelJob, diagnoseConsole, jobStatus, startJob } from '../extension/page';
+import { SPEEDS, chunkText, isSpeed, prepareScript } from '../extension/script';
 import type { WmksWidget } from '../extension/wmks';
 
 interface TestCase {
@@ -163,6 +164,41 @@ async function test(id?: string, delayMs = 3000): Promise<void> {
   console.log('TypeThru: done. Compare each line in the guest editor with "expected" and report the result in issue #6.');
 }
 
+interface ScriptCallOptions {
+  stripIndent?: boolean;
+  enter?: boolean;
+  speed?: string;
+  delayMs?: number;
+}
+
+/**
+ * Sends multi-line text line by line, like the popup's Script mode.
+ * Every line break presses Enter – use a text editor inside the VM, not a shell.
+ */
+async function script(text: string, layout = 'de', opts: ScriptCallOptions = {}): Promise<void> {
+  requireWidget();
+  const prepared = prepareScript(text, { stripIndent: !!opts.stripIndent, trailingEnter: !!opts.enter });
+  const chunks = chunkText(convertText(prepared, layout));
+  const speed = isSpeed(opts.speed) ? opts.speed : 'normal';
+  await countdown(opts.delayMs ?? 3000);
+  const r = startJob(chunks, SPEEDS[speed].delayMs);
+  if ('ok' in r && !r.ok) throw new Error('TypeThru: ' + r.msg);
+  console.log(`TypeThru: sending ${chunks.length} chunks (${speed}). typethru.cancel() stops.`);
+  for (;;) {
+    await sleep(500);
+    const s = jobStatus();
+    if (!s || !s.running) {
+      console.log(s?.cancelled ? `TypeThru: cancelled after ${s.sent}/${s.total} chunks.` : s?.error ? `TypeThru: stopped – ${s.error}` : 'TypeThru: script sent.');
+      return;
+    }
+  }
+}
+
+function cancel(): void {
+  const s = cancelJob();
+  console.log(s ? `TypeThru: cancelled after ${s.sent}/${s.total} chunks.` : 'TypeThru: nothing to cancel.');
+}
+
 function tests(): void {
   console.table(CASES.map(c => ({
     id: c.id,
@@ -190,6 +226,9 @@ function help(): void {
   typethru.enforce(true | false)       switch it on or off
   typethru.password()                  login screen: Enforce US OFF + German conversion, no Enter
   typethru.password('enforce')         login screen: Enforce US ON, no conversion, no Enter
+  typethru.script(text, layout = 'de', { stripIndent, enter, speed })
+                                       multi-line text line by line (speed: fast, normal, slow)
+  typethru.cancel()                    stop a running script
   typethru.tests()                     list the test cases
   typethru.test('T3')                  text editor only: run one case, typethru.test() runs all
                                        (presses Enter – never use on a login screen or in a shell)
@@ -206,6 +245,8 @@ const api = {
   raw,
   prompt: promptSend,
   password,
+  script,
+  cancel,
   check,
   enforce,
   tests,
