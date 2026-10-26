@@ -128,7 +128,7 @@ export const NO_CONVERSION = 'us';
 
 /** Layout choices for the UI, "no conversion" first. */
 export const LAYOUT_CHOICES: readonly { id: string; name: string }[] = [
-  { id: NO_CONVERSION, name: 'US (no conversion)' },
+  { id: NO_CONVERSION, name: 'US' },
   ...LAYOUTS.map(l => ({ id: l.id, name: l.name })),
 ];
 
