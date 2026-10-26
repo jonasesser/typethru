@@ -6,6 +6,8 @@
 
 **Paste text into the vSphere web console.**
 
+[![CI](https://github.com/jonasesser/typethru/actions/workflows/ci.yml/badge.svg)](https://github.com/jonasesser/typethru/actions/workflows/ci.yml)
+
 The vSphere HTML5 web console has no clipboard support for the guest. TypeThru is a
 small browser extension that sends text to the console as keystrokes, so you don't
 have to type long passwords, commands or license keys by hand.
@@ -36,22 +38,32 @@ text so the right characters arrive.
 
 ## Installation
 
-### Extension (Chrome / Edge)
+### From the store
 
-1. Download or clone this repository.
-2. Open `chrome://extensions` or `edge://extensions`.
-3. Turn on **Developer mode**.
-4. Click **Load unpacked** and select the `dist/extension` folder.
-5. Optional: pin TypeThru to the toolbar.
+Chrome Web Store and Edge Add-ons releases are in preparation.
 
-The `dist` folder is created by the build (see [Development](#development)). Store
-releases are planned.
+### From a release (Chrome / Edge)
+
+1. Download `typethru-extension-<version>.zip` from the
+   [latest release](https://github.com/jonasesser/typethru/releases/latest) and unzip it.
+2. Open `chrome://extensions` or `edge://extensions` and turn on **Developer mode**.
+3. Click **Load unpacked** and select the unzipped folder.
+4. Optional: pin TypeThru to the toolbar.
+
+Your organization may block unpacked extensions. In that case use the bookmarklet or
+ask your administrator.
 
 ### Bookmarklet
 
-If your browser does not allow extensions, open `dist/bookmarklet/install.html` in
-the browser and drag one of the buttons onto the favorites bar. See
+If your browser does not allow extensions, download
+`typethru-bookmarklet-<version>.html` from the
+[latest release](https://github.com/jonasesser/typethru/releases/latest), open it in
+the browser and drag the button for your guest layout onto the favorites bar. See
 [Bookmarklet](#bookmarklet-1) below.
+
+### From source
+
+See [Development](#development).
 
 ## Usage
 
@@ -167,6 +179,9 @@ npm test          # unit tests
 npm run check     # type check
 ```
 
+After building, load `dist/extension` with **Load unpacked**. The bookmarklet install
+page is `dist/bookmarklet/install.html`.
+
 ```
 src/
   extension/      Browser extension (Manifest V3)
@@ -187,6 +202,21 @@ test/             Unit tests and manual test matrix
 Functions in `page.ts` are serialized and run inside the console page, so they must
 stay self-contained (no imports other than types). The build does not minify the
 extension, so the shipped code stays readable for review.
+
+### Releases
+
+Bump the version in `package.json` (the manifest version is taken from it), then tag:
+
+```
+git tag v0.6.0
+git push origin v0.6.0
+```
+
+The release workflow checks, tests and builds the tag and attaches the extension zip,
+the bookmarklet page and the DevTools tools to a GitHub release. CI runs the same
+checks on every push and pull request.
+
+### Manual tests
 
 Manual tests against a real console are described in
 [test/MANUAL-TESTS.md](test/MANUAL-TESTS.md). After building, these scripts help with

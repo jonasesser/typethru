@@ -174,7 +174,7 @@ The full source code and build instructions are available at https://github.com/
 
 - [ ] `npm test`, `npm run check` and `npm run build` pass
 - [ ] Version in `package.json` bumped
-- [ ] Zip the contents of `dist/extension` (manifest.json at the zip root)
+- [ ] Tag the version and use `typethru-extension-<version>.zip` from the GitHub release (manifest.json at the zip root)
 - [ ] Screenshots added
 - [ ] Privacy policy URL reachable
 - [ ] Chrome: developer account registered (one-time fee)
