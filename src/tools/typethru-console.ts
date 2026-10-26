@@ -47,6 +47,22 @@ const CASES: TestCase[] = [
 
 let method: Method = 'scancodes';
 
+const LAYOUT_IDS = LAYOUT_CHOICES.map(c => c.id);
+
+function requireLayout(layout: string): string {
+  if (!LAYOUT_IDS.includes(layout)) {
+    throw new Error(`TypeThru: unknown VM keyboard layout "${layout}". Use one of: ${LAYOUT_IDS.join(', ')}`);
+  }
+  return layout;
+}
+
+function requireMethod(m: string): Method {
+  if (m !== 'scancodes' && m !== 'fallback') {
+    throw new Error(`TypeThru: unknown method "${m}". Use 'scancodes' (default) or 'fallback'.`);
+  }
+  return m;
+}
+
 function findWidget(): WmksWidget | null {
   const $ = window.jQuery;
   if (!$) return null;
@@ -121,6 +137,7 @@ async function typeText(text: string, layout: string, use: Method, strokeDelayMs
 
 /** Types text for the VM keyboard layout (3 s delay). */
 async function send(text: string, layout = 'de', delayMs = 3000): Promise<void> {
+  requireLayout(layout);
   requireWidget();
   if (method === 'scancodes') textToStrokes(text, layout); else convertText(text, layout); // validate first
   await countdown(delayMs);
@@ -144,18 +161,26 @@ async function promptSend(layout = 'de'): Promise<void> {
 /**
  * Password test for the login screen: asks for the password in a dialog (not stored in
  * the console history) and types it without pressing Enter.
- *   typethru.password()            scan codes (all characters incl. AltGr)
- *   typethru.password('fallback')  previous method (no AltGr characters)
+ *   typethru.password()                 VM with German layout, scan codes
+ *   typethru.password('us')             VM with US layout
+ *   typethru.password('de', 'fallback') previous method (no AltGr characters)
  */
-async function password(use: Method = 'scancodes', layout = 'de'): Promise<void> {
+async function password(layout = 'de', use: string = 'scancodes'): Promise<void> {
+  // Older versions took the method as first argument
+  if (layout === 'scancodes' || layout === 'fallback') [layout, use] = ['de', layout];
+  requireLayout(layout);
+  const m = requireMethod(use);
   requireWidget();
-  const text = prompt(`TypeThru password test (${use}, layout ${layout}).\nThe password is typed without pressing Enter.`);
+  const text = prompt(`TypeThru password test – VM keyboard layout: ${layout}, method: ${m}.\nThe password is typed without pressing Enter.`);
   if (!text) return;
-  const bad = use === 'scancodes' ? untypeableChars(text, layout) : [];
-  if (bad.length) throw new Error('TypeThru: not on the keyboard layout: ' + bad.join(' '));
-  if (use === 'fallback') convertText(text, layout);
+  if (m === 'scancodes') {
+    const bad = untypeableChars(text, layout);
+    if (bad.length) throw new Error(`TypeThru: not on the ${layout} keyboard layout: ${bad.join(' ')}`);
+  } else {
+    convertText(text, layout); // throws for unsupported characters before anything is sent
+  }
   await countdown(3000);
-  await typeText(text, layout, use, LINE_STROKE_DELAY_MS, 0);
+  await typeText(text, layout, m, LINE_STROKE_DELAY_MS, 0);
   console.log('TypeThru: check the password with the eye icon in the password field, then press Enter yourself if it is correct.');
 }
 
@@ -171,6 +196,7 @@ interface ScriptCallOptions {
  * Every line break presses Enter – use a text editor inside the VM, not a shell.
  */
 async function script(text: string, layout = 'de', opts: ScriptCallOptions = {}): Promise<void> {
+  requireLayout(layout);
   requireWidget();
   const prepared = prepareScript(text, { stripIndent: !!opts.stripIndent, trailingEnter: !!opts.enter });
   if (method === 'scancodes') textToStrokes(prepared, layout); else convertText(prepared, layout);
@@ -191,9 +217,17 @@ function cancel(): void {
  * Runs one test case or all of them (one line per case in the guest editor).
  * Presses Enter after each line – only use it in a text editor, never on a login screen or in a shell.
  */
-async function test(id?: string, delayMs = 3000): Promise<void> {
-  const cases = id ? CASES.filter(c => c.id.toLowerCase() === id.toLowerCase()) : CASES;
+async function test(id?: string, layout?: string, delayMs = 3000): Promise<void> {
+  let cases = id ? CASES.filter(c => c.id.toLowerCase() === id.toLowerCase()) : CASES;
   if (!cases.length) throw new Error(`TypeThru: unknown test ${id}. Use typethru.tests() to list them.`);
+  if (layout && layout !== 'de') {
+    // Other VM layout: scan code cases whose text exists on that layout
+    requireLayout(layout);
+    cases = cases
+      .filter(c => c.method === 'scancodes' && untypeableChars(c.text, layout).length === 0)
+      .map(c => ({ ...c, layout, title: c.title.replace('German', layout) }));
+    if (!cases.length) throw new Error(`TypeThru: no test case fits layout ${layout}. Try typethru.test('T3', '${layout}').`);
+  }
   requireWidget();
   await countdown(delayMs);
   for (const c of cases) {
@@ -214,8 +248,8 @@ function checkText(text: string, layout = 'de'): void {
   else console.log(`TypeThru: all characters can be typed with layout ${layout}.`);
 }
 
-function useMethod(next?: Method): Method {
-  if (next) method = next;
+function useMethod(next?: string): Method {
+  if (next) method = requireMethod(next);
   console.log(`TypeThru: method ${method}${method === 'scancodes' && !hasScanCodes() ? ' (not available here, fallback will be used)' : ''}`);
   return method;
 }
@@ -225,8 +259,9 @@ function help(): void {
 
   typethru.send(text, layout = 'de')   type text; layout = keyboard layout set INSIDE the VM
   typethru.prompt(layout = 'de')       ask for the text in a dialog, then type it
-  typethru.password()                  login screen: dialog, typed without Enter
-  typethru.password('fallback')        same with the previous method (no AltGr characters)
+  typethru.password(layout = 'de')     login screen: dialog, typed without Enter
+                                       e.g. typethru.password('us') for a VM with US layout
+  typethru.password('de', 'fallback')  same with the previous method (no AltGr characters)
   typethru.script(text, layout = 'de', { stripIndent, enter, speed })
                                        multi-line text (speed: fast, normal, slow)
   typethru.cancel()                    stop a running send
@@ -236,6 +271,7 @@ function help(): void {
   typethru.enforce()                   show / switch "Enforce US Keyboard Layout"
   typethru.tests()                     list the test cases
   typethru.test('T1')                  text editor only: run one case, typethru.test() runs all
+  typethru.test(undefined, 'us')       all cases that fit a VM with another layout (e.g. 'us')
                                        (presses Enter – never use on a login screen or in a shell)
   typethru.diagnose()                  diagnostics report
   typethru.layouts()                   available layout ids
