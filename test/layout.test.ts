@@ -68,8 +68,8 @@ test('error lists the offending characters once', () => {
 });
 
 test('unsupportedChars', () => {
-  assert.deepEqual(unsupportedChars('Passwort123!'), []);
-  assert.deepEqual(unsupportedChars('a@b@c{'), ['@', '{']);
+  assert.deepEqual(unsupportedChars('Passwort123!', 'de'), []);
+  assert.deepEqual(unsupportedChars('a@b@c{', 'de'), ['@', '{']);
 });
 
 test('generated map keeps all mappings of the original hand-written table', () => {

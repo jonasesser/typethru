@@ -39,13 +39,75 @@ const US_ROWS: RowChars = {
 
 export const GERMAN: Layout = {
   id: 'de',
-  name: 'German',
+  name: 'German (Germany, Austria)',
   rows: {
     normal: ['^1234567890ß´', 'qwertzuiopü+', 'asdfghjklöä#', '<yxcvbnm,.-'],
     shift: ['°!"§$%&/()=?`', 'QWERTZUIOPÜ*', "ASDFGHJKLÖÄ'", '>YXCVBNM;:_'],
   },
   dead: '^´`',
 };
+
+export const SWISS_GERMAN: Layout = {
+  id: 'de-ch',
+  name: 'Swiss German',
+  rows: {
+    normal: ["§1234567890'^", 'qwertzuiopü¨', 'asdfghjklöä$', '<yxcvbnm,.-'],
+    shift: ['°+"*ç%&/()=?`', 'QWERTZUIOPè!', 'ASDFGHJKLéà£', '>YXCVBNM;:_'],
+  },
+  dead: '^`¨',
+};
+
+export const FRENCH: Layout = {
+  id: 'fr',
+  name: 'French (AZERTY)',
+  rows: {
+    normal: ['²&é"\'(-è_çà)=', 'azertyuiop^$', 'qsdfghjklmù*', '<wxcvbn,;:!'],
+    shift: [NONE + '1234567890°+', 'AZERTYUIOP¨£', 'QSDFGHJKLM%µ', '>WXCVBN?./§'],
+  },
+  dead: '^¨',
+};
+
+export const UK: Layout = {
+  id: 'uk',
+  name: 'English (UK)',
+  rows: {
+    normal: ['`1234567890-=', 'qwertyuiop[]', "asdfghjkl;'#", '\\zxcvbnm,./'],
+    shift: ['¬!"£$%^&*()_+', 'QWERTYUIOP{}', 'ASDFGHJKL:@~', '|ZXCVBNM<>?'],
+  },
+  dead: '',
+};
+
+export const SPANISH: Layout = {
+  id: 'es',
+  name: 'Spanish',
+  rows: {
+    normal: ["º1234567890'¡", 'qwertyuiop`+', 'asdfghjklñ´ç', '<zxcvbnm,.-'],
+    shift: ['ª!"·$%&/()=?¿', 'QWERTYUIOP^*', 'ASDFGHJKLÑ¨Ç', '>ZXCVBNM;:_'],
+  },
+  dead: '`^´¨',
+};
+
+export const ITALIAN: Layout = {
+  id: 'it',
+  name: 'Italian',
+  rows: {
+    normal: ["\\1234567890'ì", 'qwertyuiopè+', 'asdfghjklòàù', '<zxcvbnm,.-'],
+    shift: ['|!"£$%&/()=?^', 'QWERTYUIOPé*', 'ASDFGHJKLç°§', '>ZXCVBNM;:_'],
+  },
+  dead: '',
+};
+
+/** Guest layouts with conversion. "us" (no conversion) is handled separately. */
+export const LAYOUTS: readonly Layout[] = [GERMAN, SWISS_GERMAN, FRENCH, UK, SPANISH, ITALIAN];
+
+/** Layout id meaning "send the text as-is" (guest uses a US layout). */
+export const NO_CONVERSION = 'us';
+
+/** Layout choices for the UI, "no conversion" first. */
+export const LAYOUT_CHOICES: readonly { id: string; name: string }[] = [
+  { id: NO_CONVERSION, name: 'US (no conversion)' },
+  ...LAYOUTS.map(l => ({ id: l.id, name: l.name })),
+];
 
 /** Characters that never need conversion. */
 const PASS_THROUGH = ' \n\t';
@@ -83,10 +145,22 @@ export function buildMap(layout: Layout): ReadonlyMap<string, string> {
   return map;
 }
 
-const DE_MAP = buildMap(GERMAN);
+const maps = new Map<string, ReadonlyMap<string, string>>();
+
+function mapFor(layoutId: string): ReadonlyMap<string, string> | null {
+  if (layoutId === NO_CONVERSION) return null;
+  let map = maps.get(layoutId);
+  if (!map) {
+    const layout = LAYOUTS.find(l => l.id === layoutId);
+    if (!layout) throw new Error(`Unknown keyboard layout: ${layoutId}`);
+    map = buildMap(layout);
+    maps.set(layoutId, map);
+  }
+  return map;
+}
 
 /** DE -> US conversion map as a plain object (guest character -> text to send). */
-export const DE_TO_US: Readonly<Record<string, string>> = Object.fromEntries(DE_MAP);
+export const DE_TO_US: Readonly<Record<string, string>> = Object.fromEntries(buildMap(GERMAN));
 
 export class UnsupportedCharsError extends Error {
   readonly chars: string[];
@@ -98,17 +172,27 @@ export class UnsupportedCharsError extends Error {
   }
 }
 
-/** Returns the characters in text that cannot be typed with the German layout, each once. */
-export function unsupportedChars(text: string): string[] {
-  return [...new Set([...text].filter(c => !DE_MAP.has(c)))];
+/** Returns the characters in text that cannot be typed with the given guest layout, each once. */
+export function unsupportedChars(text: string, layoutId: string): string[] {
+  const map = mapFor(layoutId);
+  if (!map) return [];
+  return [...new Set([...text].filter(c => !map.has(c)))];
 }
 
 /**
- * Converts text typed for a German layout to the US characters on the same keys.
+ * Converts text for a guest with the given layout into the US characters on the same keys.
+ * Returns the text unchanged for NO_CONVERSION.
  * @throws UnsupportedCharsError if the text contains characters that cannot be typed.
  */
-export function convertDeToUs(text: string): string {
-  const bad = unsupportedChars(text);
+export function convertText(text: string, layoutId: string): string {
+  const map = mapFor(layoutId);
+  if (!map) return text;
+  const bad = unsupportedChars(text, layoutId);
   if (bad.length) throw new UnsupportedCharsError(bad);
-  return [...text].map(c => DE_MAP.get(c)!).join('');
+  return [...text].map(c => map.get(c)!).join('');
+}
+
+/** Shortcut for the German layout. */
+export function convertDeToUs(text: string): string {
+  return convertText(text, GERMAN.id);
 }
