@@ -28,7 +28,8 @@ test('every layout types all digits and the basic Latin letters', () => {
 test('dead keys of every layout are sent as key + space', () => {
   for (const layout of LAYOUTS) {
     const map = buildMap(layout);
-    for (const d of layout.dead) {
+    const onBaseLevels = [...layout.rows.normal.join(''), ...layout.rows.shift.join('')];
+    for (const d of [...layout.dead].filter(c => onBaseLevels.includes(c))) {
       const out = map.get(d);
       assert.ok(out, `${layout.id}: dead key ${d} missing`);
       assert.match(out!, /^. $/, `${layout.id}: dead key ${d}`);

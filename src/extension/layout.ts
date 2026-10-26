@@ -8,7 +8,7 @@
 // Layouts are described as key tables; the conversion map is generated from them.
 
 /** Physical keys in row order, as KeyboardEvent.code names. */
-const ROWS: readonly (readonly string[])[] = [
+export const ROWS: readonly (readonly string[])[] = [
   ['Backquote', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0', 'Minus', 'Equal'],
   ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'BracketLeft', 'BracketRight'],
   ['KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'Semicolon', 'Quote', 'Backslash'],
@@ -16,10 +16,10 @@ const ROWS: readonly (readonly string[])[] = [
 ];
 
 /** Placeholder for "this key has no character on this level". */
-const NONE = '\u0000';
+export const NONE = '\u0000';
 
 /** One string per row: the characters on each key, in ROWS order. */
-interface RowChars {
+export interface RowChars {
   normal: readonly [string, string, string, string];
   shift: readonly [string, string, string, string];
 }
@@ -30,9 +30,13 @@ export interface Layout {
   rows: RowChars;
   /** Characters produced by dead keys; they are sent as key + space. */
   dead: string;
+  /** Characters on the AltGr level, by physical key. */
+  altgr?: Readonly<Record<string, string>>;
+  /** Characters on the Shift+AltGr level, by physical key. */
+  altgrShift?: Readonly<Record<string, string>>;
 }
 
-const US_ROWS: RowChars = {
+export const US_ROWS: RowChars = {
   normal: ['`1234567890-=', 'qwertyuiop[]', "asdfghjkl;'\\", NONE + 'zxcvbnm,./'],
   shift: ['~!@#$%^&*()_+', 'QWERTYUIOP{}', 'ASDFGHJKL:"|', NONE + 'ZXCVBNM<>?'],
 };
@@ -45,6 +49,10 @@ export const GERMAN: Layout = {
     shift: ['°!"§$%&/()=?`', 'QWERTZUIOPÜ*', "ASDFGHJKLÖÄ'", '>YXCVBNM;:_'],
   },
   dead: '^´`',
+  altgr: {
+    Digit2: '²', Digit3: '³', Digit7: '{', Digit8: '[', Digit9: ']', Digit0: '}', Minus: '\\',
+    KeyQ: '@', KeyE: '€', BracketRight: '~', IntlBackslash: '|', KeyM: 'µ',
+  },
 };
 
 export const SWISS_GERMAN: Layout = {
@@ -54,7 +62,11 @@ export const SWISS_GERMAN: Layout = {
     normal: ["§1234567890'^", 'qwertzuiopü¨', 'asdfghjklöä$', '<yxcvbnm,.-'],
     shift: ['°+"*ç%&/()=?`', 'QWERTZUIOPè!', 'ASDFGHJKLéà£', '>YXCVBNM;:_'],
   },
-  dead: '^`¨',
+  dead: '^`¨´~',
+  altgr: {
+    Digit1: '¦', Digit2: '@', Digit3: '#', Digit6: '¬', Digit7: '|', Digit8: '¢', Minus: '´', Equal: '~',
+    KeyE: '€', BracketLeft: '[', BracketRight: ']', Quote: '{', Backslash: '}', IntlBackslash: '\\',
+  },
 };
 
 export const FRENCH: Layout = {
@@ -64,7 +76,11 @@ export const FRENCH: Layout = {
     normal: ['²&é"\'(-è_çà)=', 'azertyuiop^$', 'qsdfghjklmù*', '<wxcvbn,;:!'],
     shift: [NONE + '1234567890°+', 'AZERTYUIOP¨£', 'QSDFGHJKLM%µ', '>WXCVBN?./§'],
   },
-  dead: '^¨',
+  dead: '^¨~`',
+  altgr: {
+    Digit2: '~', Digit3: '#', Digit4: '{', Digit5: '[', Digit6: '|', Digit7: '`', Digit8: '\\',
+    Digit9: '^', Digit0: '@', Minus: ']', Equal: '}', KeyE: '€', BracketRight: '¤',
+  },
 };
 
 export const UK: Layout = {
@@ -75,6 +91,7 @@ export const UK: Layout = {
     shift: ['¬!"£$%^&*()_+', 'QWERTYUIOP{}', 'ASDFGHJKL:@~', '|ZXCVBNM<>?'],
   },
   dead: '',
+  altgr: { Backquote: '¦', Digit4: '€' },
 };
 
 export const SPANISH: Layout = {
@@ -84,7 +101,11 @@ export const SPANISH: Layout = {
     normal: ["º1234567890'¡", 'qwertyuiop`+', 'asdfghjklñ´ç', '<zxcvbnm,.-'],
     shift: ['ª!"·$%&/()=?¿', 'QWERTYUIOP^*', 'ASDFGHJKLÑ¨Ç', '>ZXCVBNM;:_'],
   },
-  dead: '`^´¨',
+  dead: '`^´¨~',
+  altgr: {
+    Backquote: '\\', Digit1: '|', Digit2: '@', Digit3: '#', Digit4: '~', Digit6: '¬', KeyE: '€',
+    BracketLeft: '[', BracketRight: ']', Quote: '{', Backslash: '}',
+  },
 };
 
 export const ITALIAN: Layout = {
@@ -95,6 +116,8 @@ export const ITALIAN: Layout = {
     shift: ['|!"£$%&/()=?^', 'QWERTYUIOPé*', 'ASDFGHJKLç°§', '>ZXCVBNM;:_'],
   },
   dead: '',
+  altgr: { KeyE: '€', BracketLeft: '[', BracketRight: ']', Semicolon: '@', Quote: '#' },
+  altgrShift: { BracketLeft: '{', BracketRight: '}' },
 };
 
 /** Guest layouts with conversion. "us" (no conversion) is handled separately. */
@@ -113,7 +136,7 @@ export const LAYOUT_CHOICES: readonly { id: string; name: string }[] = [
 const PASS_THROUGH = ' \n\t';
 
 /** Character on each physical key and shift level, e.g. "KeyQ:0" -> "q". */
-function keyTable(rows: RowChars): Map<string, string> {
+export function keyTable(rows: RowChars): Map<string, string> {
   const table = new Map<string, string>();
   ROWS.forEach((codes, r) => {
     const levels = [rows.normal[r], rows.shift[r]];
@@ -165,8 +188,8 @@ export const DE_TO_US: Readonly<Record<string, string>> = Object.fromEntries(bui
 export class UnsupportedCharsError extends Error {
   readonly chars: string[];
 
-  constructor(chars: string[]) {
-    super('Not supported with this layout (AltGr, extra key or not on the keyboard): ' + chars.join(' '));
+  constructor(chars: string[], reason = 'Not supported with this layout (AltGr, extra key or not on the keyboard)') {
+    super(`${reason}: ${chars.join(' ')}`);
     this.name = 'UnsupportedCharsError';
     this.chars = chars;
   }
