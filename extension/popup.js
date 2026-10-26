@@ -6,6 +6,19 @@
 const ALLOWED_HOSTS = [];
 // =========================
 
+// DE -> US mapping: for each character as it appears on a German keyboard,
+// the US character that sits on the same physical key.
+const DE_TO_US = {
+  y: 'z', z: 'y', Y: 'Z', Z: 'Y',
+  '"': '@', '§': '#', '&': '^', '/': '&', '(': '*', ')': '(', '=': ')',
+  'ß': '-', '?': '_', 'ü': '[', 'Ü': '{', '+': ']', '*': '}',
+  'ö': ';', 'Ö': ':', 'ä': "'", 'Ä': '"', '#': '\\', "'": '|',
+  ';': '<', ':': '>', '-': '/', '_': '?', '°': '~', '^': '` ',
+};
+// Characters that need AltGr or the extra ISO "<>" key cannot be produced
+// through sendInputString in this console mode.
+const UNSUPPORTED_DE = '@€{[]}\\~|<>µ²³';
+
 // ---------- Functions injected into the page (MAIN world) ----------
 // They must be self-contained: no references to anything outside themselves.
 
@@ -85,12 +98,27 @@ async function init() {
 el('show').onchange = () => { el('text').type = el('show').checked ? 'text' : 'password'; };
 el('text').addEventListener('keydown', e => { if (e.key === 'Enter' && !el('send').disabled) el('send').click(); });
 
+// Remember the conversion setting (only this one boolean is stored, never the text).
+try {
+  const saved = localStorage.getItem('convert');
+  if (saved !== null) el('convert').checked = saved === '1';
+} catch (e) {}
+el('convert').onchange = () => {
+  try { localStorage.setItem('convert', el('convert').checked ? '1' : '0'); } catch (e) {}
+};
+
 el('send').onclick = async () => {
   const text = el('text').value;
   if (!text) return setStatus('Please enter some text.', false);
   if (!target) return setStatus('No console target.', false);
 
+  // Conversion happens here in the extension, not in the page.
   let out = text;
+  if (el('convert').checked) {
+    const bad = [...new Set([...text].filter(c => UNSUPPORTED_DE.includes(c)))];
+    if (bad.length) return setStatus('Not supported (AltGr / <> key): ' + bad.join(' '), false);
+    out = [...text].map(c => DE_TO_US[c] ?? c).join('');
+  }
 
   el('send').disabled = true;
   try {
