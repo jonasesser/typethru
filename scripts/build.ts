@@ -118,7 +118,7 @@ ${fields}
 }
 
 async function buildTools(): Promise<void> {
-  for (const name of ['console-diagnostics', 'send-test-string']) {
+  for (const name of ['typethru-console', 'console-diagnostics', 'send-test-string']) {
     await build({
       entryPoints: [join(src, 'tools', `${name}.ts`)],
       outfile: join(dist, 'tools', `${name}.js`),
