@@ -23,19 +23,19 @@ const ui = {
   targetTitle: el('targetTitle'),
   targetDetail: el('targetDetail'),
   text: el<HTMLInputElement>('text'),
-  show: el<HTMLInputElement>('show'),
+  show: el<HTMLButtonElement>('show'),
   layout: el<HTMLSelectElement>('layout'),
   enforce: el<HTMLInputElement>('enforce'),
   send: el<HTMLButtonElement>('send'),
   status: el('status'),
-  options: el<HTMLAnchorElement>('options'),
+  options: el<HTMLButtonElement>('options'),
   diag: el<HTMLDetailsElement>('diag'),
   diagOut: el('diagOut'),
 };
 
 function setStatus(msg: string, ok: boolean): void {
   ui.status.textContent = msg;
-  ui.status.className = ok ? 'ok' : 'err';
+  ui.status.className = 'message ' + (ok ? 'ok' : 'err');
 }
 
 const errorMessage = (e: unknown): string => (e instanceof Error ? e.message : String(e));
@@ -51,6 +51,7 @@ function showTarget(info: StatusInfo): void {
 function setReady(ready: boolean): void {
   ui.text.disabled = !ready;
   ui.send.disabled = !ready;
+  ui.show.disabled = !ready;
   if (ready) ui.text.focus();
 }
 
@@ -91,8 +92,12 @@ async function init(settings: Settings): Promise<void> {
   }
 }
 
-ui.show.addEventListener('change', () => {
-  ui.text.type = ui.show.checked ? 'text' : 'password';
+ui.show.addEventListener('click', () => {
+  const show = ui.show.getAttribute('aria-pressed') !== 'true';
+  ui.show.setAttribute('aria-pressed', String(show));
+  ui.show.title = ui.show.ariaLabel = show ? 'Hide text' : 'Show text';
+  ui.text.type = show ? 'text' : 'password';
+  ui.text.focus();
 });
 
 ui.text.addEventListener('keydown', e => {
@@ -138,8 +143,7 @@ ui.diag.addEventListener('toggle', async () => {
   ui.diagOut.textContent = JSON.stringify(report, null, 2);
 });
 
-ui.options.addEventListener('click', e => {
-  e.preventDefault();
+ui.options.addEventListener('click', () => {
   void chrome.runtime.openOptionsPage();
 });
 

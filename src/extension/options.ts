@@ -14,14 +14,14 @@ const managed = el('managed');
 
 function setStatus(msg: string, ok: boolean): void {
   status.textContent = msg;
-  status.className = ok ? 'ok' : 'err';
+  status.className = 'message ' + (ok ? 'ok' : 'err');
 }
 
 async function init(): Promise<void> {
   const settings = await loadSettings();
   hosts.value = settings.allowedHosts.join('\n');
   if (settings.hostsManaged) {
-    managed.style.display = 'block';
+    managed.hidden = false;
     hosts.readOnly = true;
     save.disabled = true;
   }

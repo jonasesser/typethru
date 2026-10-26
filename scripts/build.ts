@@ -34,7 +34,7 @@ async function buildExtension(): Promise<void> {
     minify: false,
     legalComments: 'none',
   });
-  for (const file of ['popup.html', 'options.html', 'managed_schema.json']) {
+  for (const file of ['popup.html', 'options.html', 'styles.css', 'managed_schema.json']) {
     await copyFile(join(src, 'extension', file), join(out, file));
   }
   await cp(join(src, 'extension', 'icons'), join(out, 'icons'), { recursive: true });

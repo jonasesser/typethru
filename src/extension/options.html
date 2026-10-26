@@ -2,29 +2,33 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'">
-<title>TypeThru options</title>
-<style>
-  body { font: 13px system-ui, sans-serif; margin: 16px; max-width: 520px; }
-  h2 { font-size: 15px; margin: 0 0 8px; }
-  p { margin: 6px 0; color: #444; }
-  textarea { width: 100%; box-sizing: border-box; height: 120px; font: 13px ui-monospace, monospace; padding: 6px; }
-  button { padding: 6px 14px; font-size: 13px; cursor: pointer; margin-top: 8px; }
-  code { background: #eee; padding: 1px 4px; border-radius: 3px; }
-  #managed { display: none; background: #fff4e5; border: 1px solid #f0c27b; padding: 8px; border-radius: 4px; margin: 8px 0; }
-  #status { margin-top: 8px; min-height: 1.2em; }
-  .ok { color: #157a2b; } .err { color: #b3261e; }
-</style>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'">
+<title>TypeThru settings</title>
+<link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <h2>Allowed vCenter hosts</h2>
-  <p>TypeThru only sends text to web consoles on these hosts. One host per line, for example
-    <code>vcenter.example.com</code> or <code>*.example.com</code> for all subdomains.</p>
-  <p>Leave empty to allow every host. The popup always shows the target before sending.</p>
-  <div id="managed">This list is set by your organization and cannot be changed here.</div>
-  <textarea id="hosts" spellcheck="false" autocomplete="off"></textarea>
-  <button id="save">Save</button>
-  <div id="status"></div>
+<body class="options">
+  <header class="header">
+    <img src="icons/icon-48.png" alt="">
+    <div class="brand">
+      <div class="brand-name">TypeThru settings</div>
+      <div class="brand-tag">Paste into the vSphere web console</div>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="card">
+      <h2>Allowed vCenter hosts</h2>
+      <p>TypeThru only sends text to web consoles on these hosts. One host per line, for example
+        <code>vcenter.example.com</code> or <code>*.example.com</code> for all subdomains.</p>
+      <p>Leave empty to allow every host. The popup always shows the target before sending.</p>
+      <div id="managed" class="notice" hidden>This list is set by your organization and cannot be changed here.</div>
+      <textarea id="hosts" rows="6" spellcheck="false" autocomplete="off" aria-label="Allowed hosts"></textarea>
+      <div class="actions">
+        <button id="save" class="btn-secondary" type="button">Save</button>
+        <div id="status" class="message" role="status"></div>
+      </div>
+    </section>
+  </main>
   <script src="options.js"></script>
 </body>
 </html>

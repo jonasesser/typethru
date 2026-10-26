@@ -2,36 +2,64 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'">
 <title>TypeThru</title>
-<style>
-  body { font: 13px system-ui, sans-serif; width: 270px; margin: 12px; }
-  input[type=password], input[type=text] { width: 100%; box-sizing: border-box; padding: 6px; font-size: 14px; }
-  label { display: flex; align-items: center; gap: 6px; margin: 8px 0; }
-  select { width: 100%; padding: 4px; font-size: 13px; }
-  button { width: 100%; padding: 6px; font-size: 13px; cursor: pointer; }
-  button:disabled { cursor: not-allowed; }
-  #target { font-size: 11px; color: #555; margin-bottom: 8px; word-break: break-all; }
-  #status { margin-top: 8px; min-height: 1.2em; }
-  .ok { color: #157a2b; } .err { color: #b3261e; }
-  footer { margin-top: 10px; font-size: 11px; text-align: right; }
-  footer a { color: #0b5cad; }
-  details { margin-top: 8px; font-size: 11px; }
-  summary { cursor: pointer; color: #0b5cad; }
-  pre { max-height: 180px; overflow: auto; background: #f4f4f4; padding: 6px; white-space: pre-wrap; word-break: break-all; user-select: all; }
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <div id="target"><div id="targetTitle">Looking for the console…</div><div id="targetDetail" hidden></div></div>
-  <input id="text" type="password" placeholder="Text / password" disabled autocomplete="off" spellcheck="false">
-  <label><input id="show" type="checkbox"> Show text</label>
-  <label for="layout">Guest keyboard layout</label>
-  <select id="layout"></select>
-  <label><input id="enforce" type="checkbox" disabled> Console: enforce US keyboard layout</label>
-  <button id="send" disabled>Send</button>
-  <div id="status"></div>
-  <details id="diag"><summary>Diagnostics</summary><p>Copy this into an issue when reporting a problem. It does not contain your text.</p><pre id="diagOut">Collecting…</pre></details>
-  <footer><a id="options" href="#">Options</a></footer>
+<body class="popup">
+  <header class="header">
+    <img src="icons/icon-48.png" alt="">
+    <div class="brand">
+      <div class="brand-name">TypeThru</div>
+      <div class="brand-tag">Paste into the vSphere web console</div>
+    </div>
+    <button id="options" class="icon-btn" type="button" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </header>
+
+  <main class="content">
+    <div id="target" class="status-card" data-kind="loading" role="status" aria-live="polite">
+      <div id="targetTitle" class="status-title">Looking for the console…</div>
+      <div id="targetDetail" class="status-detail" hidden></div>
+    </div>
+
+    <label class="field">
+      <span class="field-label">Text</span>
+      <span class="input-wrap">
+        <input id="text" type="password" placeholder="Password, command, key…" autocomplete="off" spellcheck="false" disabled>
+        <button id="show" class="icon-btn" type="button" aria-pressed="false" title="Show text" aria-label="Show text">
+          <svg class="when-unpressed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="when-pressed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>
+        </button>
+      </span>
+    </label>
+
+    <label class="field">
+      <span class="field-label">Guest keyboard layout</span>
+      <select id="layout"></select>
+    </label>
+
+    <label class="switch">
+      <span class="switch-text">
+        <span>Enforce US keyboard layout</span>
+        <span class="switch-hint">Setting of the web console</span>
+      </span>
+      <input id="enforce" type="checkbox" role="switch" disabled>
+    </label>
+
+    <button id="send" class="btn-primary" type="button" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+      Send to console
+    </button>
+    <div id="status" class="message" role="alert"></div>
+
+    <details id="diag">
+      <summary>Diagnostics</summary>
+      <p>Copy this into an issue when reporting a problem. It does not contain your text.</p>
+      <pre id="diagOut">Collecting…</pre>
+    </details>
+  </main>
   <script src="popup.js"></script>
 </body>
 </html>
