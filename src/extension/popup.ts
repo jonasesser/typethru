@@ -362,8 +362,18 @@ ui.diag.addEventListener('toggle', async () => {
   ui.diagOut.textContent = JSON.stringify(report, null, 2);
 });
 
-ui.options.addEventListener('click', () => {
-  void chrome.runtime.openOptionsPage();
+ui.options.addEventListener('click', async () => {
+  try {
+    await chrome.runtime.openOptionsPage();
+  } catch {
+    // Fallback, e.g. if the browser cannot open the options page from the popup
+    try {
+      await chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
+    } catch (e) {
+      return setStatus('Could not open the settings: ' + errorMessage(e), false);
+    }
+  }
+  window.close();
 });
 
 ui.enforce.addEventListener('change', async () => {
